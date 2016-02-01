@@ -1,67 +1,17 @@
-; bkerndev - Bran's Kernel Development Tutorial
-; By:   Brandon F. (friesenb@gmail.com)
-; Desc: Kernel entry point, stack, and Interrupt Service Routines.
+; This is the exception de-multiplexer code.
+; All low-level exception handling routines do the following:
+;  1. disable interrupts
+;  2. push error code on the stack (if the exception did not already
+;     do so! (Some exceptions automatically push the error code onto the
+;     stack.)
+;  3. push the number of the exception onto the stack.
+;  4. call the common interrupt service routine function, which then
+;     branches back out based on the exception number on the stack.
+;     (We do this because we don't want to replicate again and again the code 
+;      to save the processor state.)
 ;
-; Notes: No warranty expressed or implied. Use at own risk.
-;
-; This is the kernel's entry point. We could either call main here,
-; or we can use this to setup the stack or other nice stuff, like
-; perhaps setting up the GDT and segments. Please note that interrupts
-; are disabled at this point: More on interrupts later!
-[BITS 32]
-global start
-start:
-    mov esp, _sys_stack     ; This points the stack to our new stack area
-    jmp stublet
 
-; This part MUST be 4byte aligned, so we solve that issue using 'ALIGN 4'
-ALIGN 4
-mboot:
-    ; Multiboot macros to make a few lines later more readable
-    MULTIBOOT_PAGE_ALIGN	equ 1<<0
-    MULTIBOOT_MEMORY_INFO	equ 1<<1
-    MULTIBOOT_AOUT_KLUDGE	equ 1<<16
-    MULTIBOOT_HEADER_MAGIC	equ 0x1BADB002
-    MULTIBOOT_HEADER_FLAGS	equ MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO | MULTIBOOT_AOUT_KLUDGE
-    MULTIBOOT_CHECKSUM	equ -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
-    EXTERN code, bss, end
-
-    ; This is the GRUB Multiboot header. A boot signature
-    dd MULTIBOOT_HEADER_MAGIC
-    dd MULTIBOOT_HEADER_FLAGS
-    dd MULTIBOOT_CHECKSUM
-    
-    ; AOUT kludge - must be physical addresses. Make a note of these:
-    ; The linker script fills in the data for these ones!
-    dd mboot
-    dd code
-    dd bss
-    dd end
-    dd start
-
-; This is an endless loop here. Make a note of this: Later on, we
-; will insert an 'extern _main', followed by 'call _main', right
-; before the 'jmp $'.
-stublet:
-    extern _main
-    call _main
-    jmp $
-
-; Global Descriptor Table
-%include "gdt_low.asm"
-
-
-%ifdef _NO_DEF_
-; Loads the IDT defined in '_idtp' into the processor.
-; This is declared in C as 'extern void idt_load();'
-global _idt_load
-extern _idtp
-_idt_load:
-    lidt [_idtp]
-    ret
-
-; In just a few pages in this tutorial, we will add our Interrupt
-; Service Routines (ISRs) right here!
+; Here come the interrupt service routines for the 32 exceptions.
 global _isr0
 global _isr1
 global _isr2
@@ -94,6 +44,12 @@ global _isr28
 global _isr29
 global _isr30
 global _isr31
+
+
+extern _promptA
+extern _promptB
+extern _promptC
+
 
 ;  0: Divide By Zero Exception
 _isr0:
@@ -314,12 +270,14 @@ _isr31:
     jmp isr_common_stub
 
 
-; We call a C function in here. We need to let the assembler know
-; that '_fault_handler' exists in another file
-extern _fault_handler
 
-; This is our common ISR stub. It saves the processor state, sets
-; up for kernel mode segments, calls the C-level fault handler,
+; The common stub below will pun out into C. Let the 
+; assembler know that the function is defined in 'exceptions.C'.
+extern _lowlevel_dispatch_exception
+
+; This is the common low-level stub for the exception handler.
+; It saves the processor state, sets up for kernel mode
+; segments, calls the C-level exception handler, 
 ; and finally restores the stack frame.
 isr_common_stub:
     pusha
@@ -327,34 +285,31 @@ isr_common_stub:
     push es
     push fs
     push gs
-    mov ax, 0x10
+    mov ax, 0x10   ; Load the kernel data segment descriptor!
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
-    mov eax, esp
+    mov eax, esp   ; Push us the stack
     push eax
-    mov eax, _fault_handler
-    call eax
+    mov eax, _lowlevel_dispatch_exception
+    call eax	; A special call, preserves the 'eip' register
     pop eax
     pop gs
     pop fs
     pop es
     pop ds
     popa
-    add esp, 8
-    iret
+    add esp, 8	; Ceans up the pushed error code and pushed ISR number
+    iret	; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP1
+ 
 
-%endif
-%include "idt_low.asm"
 
-%include "irq_low.asm"
-
-; Here is the definition of our BSS section. Right now, we'll use
-; it just to store the stack. Remember that a stack actually grows
-; downwards, so we declare the size of the data before declaring
-; the identifier '_sys_stack'
-SECTION .bss
-    resb 8192               ; This reserves 8KBytes of memory here
-_sys_stack:
-
+; load the IDT defined in '_idtp' into the processor.
+; This is declared in C as 'extern void _idt_load();'
+; In turn, the variable '_idtp' is defined in file 'idt.C'.
+global _idt_load
+extern _idtp
+_idt_load:
+	lidt [_idtp]
+	ret

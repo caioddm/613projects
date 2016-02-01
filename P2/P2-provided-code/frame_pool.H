@@ -1,10 +1,10 @@
 /*
     File: frame_pool.H
 
-    Author: R. Bettati
+    Author: Richa Surbhi
             Department of Computer Science
             Texas A&M University
-    Date  : 12/09/03
+    Date  : 09/30/14
 
     Description: Management of the Free-Frame Pool.
 
@@ -40,8 +40,10 @@ class FramePool {
 
 private:
      /* -- DEFINE YOUR FRAME POOL DATA STRUCTURE(s) HERE. */
-     
+	 
 public:
+
+	//FramePool();
   
    FramePool(unsigned long _base_frame_no,
              unsigned long _nframes,
@@ -56,7 +58,7 @@ public:
       e.g. If _base_frame_no is 16 and _nframes is 4, this frame pool manages
       physical frames numbered 16, 17, 18 and 19
       _info_frame_no is the frame number (within the directly mapped region) of
-      the frame that should be used to store the management information of the
+      the frame0 that should be used to store the management information of the
       frame pool. However, if _info_frame_no is 0, the frame pool is free to
       choose any frame from the pool to store management information.
       */
@@ -71,7 +73,7 @@ public:
     * same semanticas as in the constructor.
     */
 
-   static void release_frame(unsigned long _frame_no);
+    static void release_frame(unsigned long _frame_no);
    /* Releases frame back to the given frame pool.
       The frame is identified by the frame number. 
       NOTE: This function is static because there may be more than one frame pool
