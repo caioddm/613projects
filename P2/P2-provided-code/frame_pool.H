@@ -24,7 +24,7 @@
 /* INCLUDES */
 /*--------------------------------------------------------------------------*/
 
-/* -- (none) -- */
+#include "utils.H"
 
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */
@@ -39,15 +39,26 @@
 class FramePool {
 
 private:
-     /* -- DEFINE YOUR FRAME POOL DATA STRUCTURE(s) HERE. */
-	 
+	/* kernel frame bitmap and frame number that stores management info*/   
+	static unsigned char* kernel_frame_bitmap;
+  static unsigned long kernel_info_frame_no;
+
+  /* process frame bitmap and frame number that stores management info*/   
+  static unsigned char* proc_frame_bitmap;
+  static unsigned long proc_info_frame_no;
+
+  /* bitmap and management frame number of the current the frame pool instance*/
+  unsigned char* frame_bitmap;
+  unsigned long info_frame_no;
+  unsigned long n_frames;
+
 public:
 
 	//FramePool();
   
-   FramePool(unsigned long _base_frame_no,
-             unsigned long _nframes,
-             unsigned long _info_frame_no);
+	FramePool(unsigned long _base_frame_no,
+		unsigned long _nframes,
+		unsigned long _info_frame_no);
    /* Initializes the data structures needed for the management of this
       frame pool. This function must be called before the paging system
       is initialized.
@@ -63,17 +74,17 @@ public:
       choose any frame from the pool to store management information.
       */
 
-   unsigned long get_frame();
+   	unsigned long get_frame();
    /* Allocates a frame from the frame pool. If successful, returns the frame
     * number of the frame. If fails, returns 0. */
 
-   void mark_inaccessible(unsigned long _base_frame_no,
-                          unsigned long _nframes);
+   	void mark_inaccessible(unsigned long _base_frame_no,
+  				unsigned long _nframes);
    /* Mark the area of physical memory as inaccessible. The arguments have the
     * same semanticas as in the constructor.
     */
 
-    static void release_frame(unsigned long _frame_no);
+    	static void release_frame(unsigned long _frame_no);
    /* Releases frame back to the given frame pool.
       The frame is identified by the frame number. 
       NOTE: This function is static because there may be more than one frame pool
