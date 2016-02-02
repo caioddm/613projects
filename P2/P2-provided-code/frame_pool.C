@@ -34,7 +34,10 @@ FramePool::FramePool(unsigned long _base_frame_no, unsigned long _nframes,unsign
 		if(kernel_info_frame_no != 0)
 			kernel_frame_bitmap = (unsigned char *)KERNEL_BASE_ADDR + ((kernel_info_frame_no - KERNEL_POOL_START_FRAME) * FRAME_SIZE);
 		else
+		{
+			kernel_info_frame_no = KERNEL_POOL_START_FRAME;
 			kernel_frame_bitmap = (unsigned char *)KERNEL_BASE_ADDR;
+		}		
 
 		kernel_frame_bitmap[0] = kernel_frame_bitmap[0] | 1<<0; //mark the first frame of the kernel pool as used
 		for(int i = 1; i < _nframes; i++)
@@ -44,6 +47,7 @@ FramePool::FramePool(unsigned long _base_frame_no, unsigned long _nframes,unsign
 		frame_bitmap = kernel_frame_bitmap;
 		info_frame_no = kernel_info_frame_no;
 		n_frames = _nframes;
+		base_frame_no = _base_frame_no;
 	}
 	else if(_base_frame_no == PROCESS_POOL_START_FRAME) //start process frame pool
 	{
@@ -54,7 +58,7 @@ FramePool::FramePool(unsigned long _base_frame_no, unsigned long _nframes,unsign
 				if(kernel_frame_bitmap[i/8] & (1 << (i % 8)) == FALSE)
 				{
 					kernel_frame_bitmap[i/8] = kernel_frame_bitmap[i/8] | (1 << (i % 8)); // mark the frame as used
-					_info_frame_no = i;
+					_info_frame_no = i + KERNEL_POOL_START_FRAME;
 					break;
 				}
 			}
@@ -70,6 +74,7 @@ FramePool::FramePool(unsigned long _base_frame_no, unsigned long _nframes,unsign
 		frame_bitmap = proc_frame_bitmap;
 		info_frame_no = proc_info_frame_no;
 		n_frames = _nframes;
+		base_frame_no = _base_frame_no;
 	}
 }
 
@@ -79,7 +84,7 @@ unsigned long FramePool::get_frame()
       if (frame_bitmap[i/8] & (1 << (i % 8)) == FALSE) //search for an available frame whithin the instance frame pool
       {
       	frame_bitmap[i/8] = frame_bitmap[i/8] | (1 << (i % 8)); // mark the frame as used
-		return i; // return the frame number
+		return i + base_frame_no; // return the frame number
       }        
 	
 	return 0; //no available frame was found
@@ -87,20 +92,23 @@ unsigned long FramePool::get_frame()
 
 void FramePool::mark_inaccessible(unsigned long _base_frame_no, unsigned long _nframes)
 {
+	_base_frame_no = _base_frame_no - base_frame_no; //compute the frame number according to the bitmap index
 	for (int i = _base_frame_no; i < _nframes ; i++)
       frame_bitmap[i/8] = frame_bitmap[i/8] | (1 << (i % 8)); // mark all the frames in the inaccessible area as used      
 }
 
 void FramePool::release_frame(unsigned long _frame_no)
-{
+{	
 	if(_frame_no < MEM_HOLE_START_FRAME || _frame_no >= (MEM_HOLE_START_FRAME + MEM_HOLE_SIZE)) //make sure that an inaccessible frame is not being released
 	{
 		if(_frame_no >= PROCESS_POOL_START_FRAME) // frame to be released belongs to the process pool
 		{
+			_frame_no = _frame_no - PROCESS_POOL_START_FRAME; //compute the frame number according to the bitmap index
 			proc_frame_bitmap[_frame_no/8] = proc_frame_bitmap[_frame_no/8] & ~(1 << (_frame_no % 8)); //mark the frame as unused
 		}
 		else if(_frame_no >= KERNEL_POOL_START_FRAME && _frame_no < (KERNEL_POOL_START_FRAME + KERNEL_POOL_SIZE)) // frame to be released belongs to the kernel pool
 		{
+			_frame_no = _frame_no - KERNEL_POOL_START_FRAME; //compute the frame number according to the bitmap index
 			kernel_frame_bitmap[_frame_no/8] = kernel_frame_bitmap[_frame_no/8] & ~(1 << (_frame_no % 8)); //mark the frame as unused
 		}
 	}
