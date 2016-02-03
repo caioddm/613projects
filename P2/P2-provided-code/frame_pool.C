@@ -81,7 +81,7 @@ FramePool::FramePool(unsigned long _base_frame_no, unsigned long _nframes,unsign
 unsigned long FramePool::get_frame()
 {
 	for (int i = 0; i < n_frames ; i++)
-      if (frame_bitmap[i/8] & (1 << (i % 8)) == FALSE) //search for an available frame whithin the instance frame pool
+      if (!(frame_bitmap[i/8] & (1 << (i % 8)))) //search for an available frame whithin the instance frame pool
       {
       	frame_bitmap[i/8] = frame_bitmap[i/8] | (1 << (i % 8)); // mark the frame as used
 		return i + base_frame_no; // return the frame number
