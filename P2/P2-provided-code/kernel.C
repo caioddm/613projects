@@ -63,9 +63,9 @@ int main() {
 
     /* -- INITIALIZE FRAME POOLS -- */
 
-  /*  FramePool kernel_mem_pool(KERNEL_POOL_START_FRAME,
+    FramePool kernel_mem_pool(KERNEL_POOL_START_FRAME,
                               KERNEL_POOL_SIZE,
-                              0);
+                            0);
     unsigned long process_mem_pool_info_frame = kernel_mem_pool.get_frame();
     FramePool process_mem_pool(PROCESS_POOL_START_FRAME,
                                PROCESS_POOL_SIZE,
@@ -73,8 +73,64 @@ int main() {
     process_mem_pool.mark_inaccessible(MEM_HOLE_START_FRAME, MEM_HOLE_SIZE);
 	
 	//test
-	
-  
+    for (int i = 0; i < KERNEL_POOL_SIZE - 2; ++i)
+    {
+      unsigned long new_frame = kernel_mem_pool.get_frame();
+      Console::puts("Kernel alllocated frame: ");
+      char* fr;
+      uint2str(new_frame, fr);
+      Console::puts(fr);
+      Console::puts("\n");
+    }
+
+    FramePool::release_frame(KERNEL_POOL_START_FRAME+KERNEL_POOL_SIZE-1);
+    FramePool::release_frame(KERNEL_POOL_START_FRAME+30);
+
+    unsigned long new_frame = kernel_mem_pool.get_frame();
+    Console::puts("Kernel alllocated frame: ");
+    char* fr;
+    uint2str(new_frame, fr);
+    Console::puts(fr);
+    Console::puts("\n");
+
+
+
+
+    for (int i = 0; i < PROCESS_POOL_SIZE; ++i)
+    {
+      new_frame = process_mem_pool.get_frame();
+      Console::puts("Process alllocated frame: ");
+      fr;
+      uint2str(new_frame, fr);
+      Console::puts(fr);
+      Console::puts("\n");
+    }
+
+    Console::puts("Allocating a frame when the process pool is full...\n");
+    new_frame = process_mem_pool.get_frame();    
+    Console::puts("Process alllocated frame: ");    
+    uint2str(new_frame, fr);
+    Console::puts(fr);
+    Console::puts("\n");
+
+    Console::puts("Releasing a frame on the process pool...\n");
+    FramePool::release_frame(PROCESS_POOL_START_FRAME+PROCESS_POOL_SIZE-1);
+    //FramePool::release_frame(PROCESS_POOL_START_FRAME);
+
+    new_frame = process_mem_pool.get_frame();
+    Console::puts("Process alllocated frame: ");    
+    uint2str(new_frame, fr);
+    Console::puts(fr);
+    Console::puts("\n");
+
+    Console::puts("Trying to remove unaccesible memory ...\n");
+    FramePool::release_frame(MEM_HOLE_START_FRAME+5);
+    new_frame = process_mem_pool.get_frame();
+    Console::puts("Process alllocated frame: ");    
+    uint2str(new_frame, fr);
+    Console::puts(fr);
+    Console::puts("\n");
+    
     /* -- MOST OF WHAT WE NEED IS SETUP. THE KERNEL CAN START. */
 
     Console::puts("Hello World, we are conquering P2!\n");
