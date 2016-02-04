@@ -38,11 +38,16 @@ FramePool::FramePool(unsigned long _base_frame_no, unsigned long _nframes,unsign
 			kernel_info_frame_no = KERNEL_POOL_START_FRAME;
 			kernel_frame_bitmap = (unsigned char *)KERNEL_BASE_ADDR;
 		}		
-
-		kernel_frame_bitmap[0] = kernel_frame_bitmap[0] | 1<<0; //mark the first frame of the kernel pool as used
-		for(int i = 1; i < _nframes; i++)
-			kernel_frame_bitmap[i/8] = kernel_frame_bitmap[i/8] & ~(1 << (i % 8)); //set all other frames on the kernel pool to unused
-
+		
+		for(int i = 0; i < _nframes; i++)
+			kernel_frame_bitmap[i/8] = kernel_frame_bitmap[i/8] & ~(1 << (i % 8)); //set all the frames on the kernel pool to unused
+		
+		if(_info_frame_no == 0)
+			kernel_frame_bitmap[0] = kernel_frame_bitmap[0] | 1<<0; //mark the first frame of the kernel pool as used
+		else
+			kernel_frame_bitmap[(kernel_info_frame_no - KERNEL_POOL_START_FRAME)/8] = 
+				kernel_frame_bitmap[(kernel_info_frame_no - KERNEL_POOL_START_FRAME)/8] | 1<<((kernel_info_frame_no - KERNEL_POOL_START_FRAME) % 8); //mark the frame of the kernel pool where the bitmap is stored as used
+		
 		/*set the data structures for the current instance*/
 		frame_bitmap = kernel_frame_bitmap;
 		info_frame_no = kernel_info_frame_no;
@@ -67,8 +72,8 @@ FramePool::FramePool(unsigned long _base_frame_no, unsigned long _nframes,unsign
 		proc_info_frame_no = _info_frame_no;
 		/* Allocates the process bitmap to the appropriated address */
 		proc_frame_bitmap = (unsigned char *)KERNEL_BASE_ADDR + ((proc_info_frame_no - KERNEL_POOL_START_FRAME) * FRAME_SIZE);
-		for(int i = 1; i < _nframes; i++)
-			proc_frame_bitmap[i/8] = proc_frame_bitmap[i/8] & ~(1 << (i % 8)); //set all other frames on the process pool to unused
+		for(int i = 0; i < _nframes; i++)
+			proc_frame_bitmap[i/8] = proc_frame_bitmap[i/8] & ~(1 << (i % 8)); //set all the frames on the process pool to unused
 
 		/*set the data structures for the current instance*/
 		frame_bitmap = proc_frame_bitmap;
