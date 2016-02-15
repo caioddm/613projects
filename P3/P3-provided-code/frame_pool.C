@@ -98,7 +98,7 @@ unsigned long FramePool::get_frame()
 void FramePool::mark_inaccessible(unsigned long _base_frame_no, unsigned long _nframes)
 {
 	_base_frame_no = _base_frame_no - base_frame_no; //compute the frame number according to the bitmap index
-	for (int i = _base_frame_no; i < _nframes ; i++)
+	for (int i = _base_frame_no; i < (_base_frame_no + _nframes) ; i++)
       frame_bitmap[i/8] = frame_bitmap[i/8] | (1 << (i % 8)); // mark all the frames in the inaccessible area as used      
 }
 
