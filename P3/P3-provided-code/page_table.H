@@ -25,6 +25,7 @@
 
 #include "exceptions.H"
 #include "frame_pool.H"
+#include "paging_low.H"
 
 /*--------------------------------------------------------------------------*/
 /* FORWARDS */

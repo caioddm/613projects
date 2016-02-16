@@ -18,16 +18,19 @@
 
 #define MB * (0x1 << 20)
 #define KB * (0x1 << 10)
-#define KERNEL_POOL_START_FRAME ((2 MB) / (4 KB))
-#define KERNEL_POOL_SIZE ((2 MB) / (4 KB))
-#define PROCESS_POOL_START_FRAME ((4 MB) / (4 KB))
-#define PROCESS_POOL_SIZE ((28 MB) / (4 KB))
+#define KERNEL_POOL_START_FRAME ((2 MB) / FRAME_SIZE)
+#define KERNEL_POOL_SIZE ((2 MB) / FRAME_SIZE)
+#define PROCESS_POOL_START_FRAME ((4 MB) / FRAME_SIZE)
+#define PROCESS_POOL_SIZE ((28 MB) / FRAME_SIZE)
 /* definition of the kernel and process memory pools */
 
-#define MEM_HOLE_START_FRAME ((15 MB) / (4 KB))
-#define MEM_HOLE_SIZE ((1 MB) / (4 KB))
+#define MEM_HOLE_START_FRAME ((15 MB) / FRAME_SIZE)
+#define MEM_HOLE_SIZE ((1 MB) / FRAME_SIZE)
 /* we have a 1 MB hole in physical memory starting at address 15 MB */
 
+#define FRAME_SIZE (4 KB)
+/* definition of the frame size */
+    
 #define FAULT_ADDR (4 MB)
 /* used in the code later as address referenced to cause page faults. */
 #define NACCESS ((1 MB) / 4)
