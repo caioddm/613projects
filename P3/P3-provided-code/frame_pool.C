@@ -97,24 +97,48 @@ unsigned long FramePool::get_frame()
 
 void FramePool::mark_inaccessible(unsigned long _base_frame_no, unsigned long _nframes)
 {
-	_base_frame_no = _base_frame_no - base_frame_no; //compute the frame number according to the bitmap index
-	for (int i = _base_frame_no; i < (_base_frame_no + _nframes) ; i++)
-      frame_bitmap[i/8] = frame_bitmap[i/8] | (1 << (i % 8)); // mark all the frames in the inaccessible area as used      
+	unsigned long start_frame = _base_frame_no;
+	unsigned long end_frame = _base_frame_no + _nframes - 1; 
+	if(start_frame >= base_frame_no && end_frame < (base_frame_no + n_frames))
+	{
+		_base_frame_no = _base_frame_no - base_frame_no; //compute the frame number according to the bitmap index
+		for (int i = _base_frame_no; i < (_base_frame_no + _nframes) ; i++)
+      		frame_bitmap[i/8] = frame_bitmap[i/8] | (1 << (i % 8)); // mark all the frames in the inaccessible area as used
+	}
+	else{
+		Console::puts("Invalid range to mark as inaccessible! \n");
+	}
 }
 
 void FramePool::release_frame(unsigned long _frame_no)
 {	
 	if(_frame_no < MEM_HOLE_START_FRAME || _frame_no >= (MEM_HOLE_START_FRAME + MEM_HOLE_SIZE)) //make sure that an inaccessible frame is not being released
 	{
-		if(_frame_no >= PROCESS_POOL_START_FRAME) // frame to be released belongs to the process pool
+		if(_frame_no >= PROCESS_POOL_START_FRAME && _frame_no < (PROCESS_POOL_START_FRAME + PROCESS_POOL_SIZE)) // frame to be released belongs to the process pool
 		{
-			_frame_no = _frame_no - PROCESS_POOL_START_FRAME; //compute the frame number according to the bitmap index
-			proc_frame_bitmap[_frame_no/8] = proc_frame_bitmap[_frame_no/8] & ~(1 << (_frame_no % 8)); //mark the frame as unused
+			if(_frame_no == proc_info_frame_no){
+				Console::puts("Invalid frame to be released! \n");
+			}
+			else{
+				_frame_no = _frame_no - PROCESS_POOL_START_FRAME; //compute the frame number according to the bitmap index
+				proc_frame_bitmap[_frame_no/8] = proc_frame_bitmap[_frame_no/8] & ~(1 << (_frame_no % 8)); //mark the frame as unused	
+			}			
 		}
 		else if(_frame_no >= KERNEL_POOL_START_FRAME && _frame_no < (KERNEL_POOL_START_FRAME + KERNEL_POOL_SIZE)) // frame to be released belongs to the kernel pool
 		{
-			_frame_no = _frame_no - KERNEL_POOL_START_FRAME; //compute the frame number according to the bitmap index
-			kernel_frame_bitmap[_frame_no/8] = kernel_frame_bitmap[_frame_no/8] & ~(1 << (_frame_no % 8)); //mark the frame as unused
+			if(_frame_no == kernel_info_frame_no){
+				Console::puts("Invalid frame to be released! \n");
+			}
+			else{
+				_frame_no = _frame_no - KERNEL_POOL_START_FRAME; //compute the frame number according to the bitmap index
+				kernel_frame_bitmap[_frame_no/8] = kernel_frame_bitmap[_frame_no/8] & ~(1 << (_frame_no % 8)); //mark the frame as unused
+			}			
 		}
+		else{
+			Console::puts("Invalid frame to be released! \n");
+		}
+	}
+	else{
+		Console::puts("Invalid frame to be released! \n");
 	}
 }
