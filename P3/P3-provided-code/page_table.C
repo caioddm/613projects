@@ -45,27 +45,54 @@ PageTable::PageTable(){
 
 	for (int i = 0; i < PAGE_TABLE_SIZE; ++i)
 	{
-		page_table[i] = addr | 3; //maps the address and set entry to be present, kernel level, and read/write
+		page_table[i] = addr | 3; //maps the address and set entry to be present, supervisor level, and read/write
 		addr = addr + FRAME_SIZE; // set the address to be the start of the next frame
 	}
 
-	page_directory[0] = *page_table; // sets the page table just created to be the first entry on the page directory
-	page_directory[0] = page_directory[0] | 3; // set entry to be present, kernel level, and read/write
+	page_directory[0] = (unsigned long)page_table; // sets the page table just created to be the first entry on the page directory
+	page_directory[0] = page_directory[0] | 3; // set entry to be present, supervisor level, and read/write
 
-	for (int i = 0; i < PAGE_TABLE_SIZE; ++i)
+	for (int i = 1; i < PAGE_TABLE_SIZE; ++i)
 	{
-		page_directory[i] = 0 | 2; //set all the other entries on the page directory to be not present, kernel level, and read/write
+		page_directory[i] = 0 | 2; //set all the other entries on the page directory to be not present, supervisor level, and read/write
 	}
 
 }
 
 void PageTable::load(){
 	current_page_table = this; //set the current page table object loaded
-	write_cr3((*page_directory)); //load the page directory on the proper register	
+	write_cr3((unsigned long)(page_directory)); //load the page directory on the proper register	
 }
 
 void PageTable::enable_paging(){
-	write_cr0(read_cr0() | 0x8000000); // set the proper paging bit to 1
+	paging_enabled = 1; //mark paging as enabled
+	write_cr0(read_cr0() | 0x80000000); // set the proper paging bit to 1
 }
 
-void PageTable::handle_fault(REGS * _r){}
+void PageTable::handle_fault(REGS * _r){
+	//Console::puts("Page fault handler called\n");
+	unsigned long fault_addr = read_cr2();
+	int directory_entry = fault_addr >> 22; //gets the entry on the page directory
+	int table_entry = (fault_addr >> 12 & 0x03FF); //gets the entry on the corresponding page table
+	unsigned long* _page_directory = current_page_table->page_directory;
+
+	if(_page_directory[directory_entry] & 1){ //page table is loaded in the page directory
+		unsigned long* page_table = (unsigned long*)(_page_directory[directory_entry] & 0xFFFFF000);
+		page_table[table_entry] = process_mem_pool->get_frame() * FRAME_SIZE;
+		page_table[table_entry] = page_table[table_entry] | 7; //maps the address and set entry to be present, user level, and read/write
+	}
+	else{ //page table needs to be loaded in the page directory
+		unsigned long* page_table = (unsigned long*) (kernel_mem_pool->get_frame() * FRAME_SIZE);
+		for (int i = 0; i < PAGE_TABLE_SIZE; ++i)
+		{
+			page_table[i] = 0; //set all the entries of the page table to be empty
+		}
+
+		unsigned long addr = process_mem_pool->get_frame() * FRAME_SIZE; //get a frame available in the process mem pool
+		page_table[table_entry] = addr | 7; //maps the address and set entry to be present, user level, and read/write
+
+		_page_directory[directory_entry] = (unsigned long)page_table;
+		_page_directory[directory_entry] = _page_directory[directory_entry] | 3; // set entry to be present, supervisor level, and read/write	
+	}
+	
+}

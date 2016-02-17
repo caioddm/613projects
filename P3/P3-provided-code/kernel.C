@@ -30,7 +30,7 @@
 
 #define FRAME_SIZE (4 KB)
 /* definition of the frame size */
-    
+
 #define FAULT_ADDR (4 MB)
 /* used in the code later as address referenced to cause page faults. */
 #define NACCESS ((1 MB) / 4)
