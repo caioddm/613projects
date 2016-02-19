@@ -60,7 +60,7 @@ PageTable::PageTable(){
 }
 
 void PageTable::load(){
-	current_page_table = this; //set the current page table object loaded
+	current_page_table = this; //set the current page table object to be the current instance
 	write_cr3((unsigned long)(page_directory)); //load the page directory on the proper register	
 }
 
@@ -84,21 +84,42 @@ void PageTable::handle_fault(REGS * _r){
 	else{ //Page is not present
 		if(_page_directory[directory_entry] & 1){ //page table that contains the address is present in the page directory
 			unsigned long* page_table = (unsigned long*)(_page_directory[directory_entry] & 0xFFFFF000); //get the page table from the page directory, ensuring that it brings the starting address of the page table
-			page_table[table_entry] = process_mem_pool->get_frame() * FRAME_SIZE; //allocate a frame from the process pool and map to the page table entry
-			page_table[table_entry] |= 7; //set entry to be present, user level, and read/write
+			unsigned long addr = process_mem_pool->get_frame() * FRAME_SIZE; //allocate a frame from the process pool
+			//check if the frame allocation was successfull
+			if(addr == 0){ 
+				Console::puts("No frame available on the memory!\n");
+			}
+			else{
+				page_table[table_entry] = addr; // map that frame to the page table entry
+				page_table[table_entry] |= 7; //set entry to be present, user level, and read/write	
+			}			
 		}
 		else{ //page table needs to be loaded in the page directory
-			unsigned long* page_table = (unsigned long*) (kernel_mem_pool->get_frame() * FRAME_SIZE); //allocate a frame from the kernel pool to hold the created page table
-			for (int i = 0; i < PAGE_TABLE_SIZE; ++i)
-			{
-				page_table[i] = 0; //set all the entries of the created page table to be empty
+			unsigned long pt_addr = (kernel_mem_pool->get_frame() * FRAME_SIZE); //allocate a frame from the kernel pool to hold the created page table
+			//check if the frame allocation was successfull
+			if(pt_addr == 0){
+				Console::puts("No frame available on the memory!\n");	
 			}
+			else{
+				unsigned long* page_table = (unsigned long*) pt_addr; 
+				for (int i = 0; i < PAGE_TABLE_SIZE; ++i)
+				{
+					page_table[i] = 0; //set all the entries of the created page table to be empty
+				}
+				unsigned long addr = process_mem_pool->get_frame() * FRAME_SIZE; //allocate a frame from the process pool
+				//check if the frame allocation was successfull
+				if(addr == 0){
+					Console::puts("No frame available on the memory!\n");			
+				}
+				else{
+					page_table[table_entry] = addr; //map that frame to the page table entry
+					page_table[table_entry] |= 7; //set entry to be present, user level, and read/write
 
-			page_table[table_entry] = process_mem_pool->get_frame() * FRAME_SIZE; //allocate a frame from the process pool and map to the page table entry
-			page_table[table_entry] |= 7; //set entry to be present, user level, and read/write
-
-			_page_directory[directory_entry] = (unsigned long)page_table; //map the created page table to the proper page directory entry
-			_page_directory[directory_entry] |= 3; // set entry to be present, supervisor level, and read/write	
+					_page_directory[directory_entry] = (unsigned long)page_table; //map the created page table to the proper page directory entry
+					_page_directory[directory_entry] |= 3; // set entry to be present, supervisor level, and read/write	
+				}				
+			}
+			
 		}	
 	}	
 	
