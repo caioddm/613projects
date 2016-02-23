@@ -27,6 +27,8 @@ FramePool* PageTable::kernel_mem_pool;
 FramePool* PageTable::process_mem_pool;
 unsigned long PageTable::shared_size;
 unsigned int PageTable::paging_enabled; 
+const unsigned int PageTable::PAGE_SIZE;
+const unsigned int PageTable::ENTRIES_PER_PAGE;
 /* Static variables definition */
 
 void PageTable::init_paging(FramePool * _kernel_mem_pool, FramePool * _process_mem_pool, const unsigned long _shared_size){
@@ -38,21 +40,21 @@ void PageTable::init_paging(FramePool * _kernel_mem_pool, FramePool * _process_m
 }
 
 PageTable::PageTable(){
-	page_directory = (unsigned long*) (kernel_mem_pool->get_frame() * FRAME_SIZE); //set the address of the page directory
-	unsigned long* page_table = (unsigned long*) (kernel_mem_pool->get_frame() * FRAME_SIZE); //set the address of the first page table in the page directory
+	page_directory = (unsigned long*) (kernel_mem_pool->get_frame() * PAGE_SIZE); //set the address of the page directory
+	unsigned long* page_table = (unsigned long*) (kernel_mem_pool->get_frame() * PAGE_SIZE); //set the address of the first page table in the page directory
 
 	unsigned long addr = 0;
 
-	for (int i = 0; i < PAGE_TABLE_SIZE; ++i)
+	for (int i = 0; i < ENTRIES_PER_PAGE; ++i)
 	{
 		page_table[i] = addr | 3; //maps the address and set entry to be present, supervisor level, and read/write
-		addr = addr + FRAME_SIZE; // set the address to be the start of the next frame
+		addr = addr + PAGE_SIZE; // set the address to be the start of the next frame
 	}
 
 	page_directory[0] = (unsigned long)page_table; // sets the page table just created to be the first entry on the page directory
 	page_directory[0] |= 3; // set entry to be present, supervisor level, and read/write
 
-	for (int i = 1; i < PAGE_TABLE_SIZE; ++i)
+	for (int i = 1; i < ENTRIES_PER_PAGE; ++i)
 	{
 		page_directory[i] = 0 | 2; //set all the other entries on the page directory to be not present, supervisor level, and read/write
 	}
@@ -84,7 +86,7 @@ void PageTable::handle_fault(REGS * _r){
 	else{ //Page is not present
 		if(_page_directory[directory_entry] & 1){ //page table that contains the address is present in the page directory
 			unsigned long* page_table = (unsigned long*)(_page_directory[directory_entry] & 0xFFFFF000); //get the page table from the page directory, ensuring that it brings the starting address of the page table
-			unsigned long addr = process_mem_pool->get_frame() * FRAME_SIZE; //allocate a frame from the process pool
+			unsigned long addr = process_mem_pool->get_frame() * PAGE_SIZE; //allocate a frame from the process pool
 			//check if the frame allocation was successfull
 			if(addr == 0){ 
 				Console::puts("No frame available on the memory!\n");
@@ -95,18 +97,18 @@ void PageTable::handle_fault(REGS * _r){
 			}			
 		}
 		else{ //page table needs to be loaded in the page directory
-			unsigned long pt_addr = (kernel_mem_pool->get_frame() * FRAME_SIZE); //allocate a frame from the kernel pool to hold the created page table
+			unsigned long pt_addr = (kernel_mem_pool->get_frame() * PAGE_SIZE); //allocate a frame from the kernel pool to hold the created page table
 			//check if the frame allocation was successfull
 			if(pt_addr == 0){
 				Console::puts("No frame available on the memory!\n");	
 			}
 			else{
 				unsigned long* page_table = (unsigned long*) pt_addr; 
-				for (int i = 0; i < PAGE_TABLE_SIZE; ++i)
+				for (int i = 0; i < ENTRIES_PER_PAGE; ++i)
 				{
 					page_table[i] = 0; //set all the entries of the created page table to be empty
 				}
-				unsigned long addr = process_mem_pool->get_frame() * FRAME_SIZE; //allocate a frame from the process pool
+				unsigned long addr = process_mem_pool->get_frame() * PAGE_SIZE; //allocate a frame from the process pool
 				//check if the frame allocation was successfull
 				if(addr == 0){
 					Console::puts("No frame available on the memory!\n");			
