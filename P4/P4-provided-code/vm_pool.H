@@ -18,7 +18,8 @@
 /* DEFINES */
 /*--------------------------------------------------------------------------*/
 
-/* -- (none) -- */
+#define KB * (0x1 << 10)
+#define FRAME_SIZE (4 KB)
 
 /*--------------------------------------------------------------------------*/
 /* INCLUDES */
@@ -26,10 +27,16 @@
 
 #include "utils.H"
 #include "frame_pool.H"
+#include "page_table.H"
 
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */
 /*--------------------------------------------------------------------------*/
+
+struct Allocated_Region{ //Struct to be used on the allocated regions list
+  unsigned long base_address;
+  unsigned long size;
+};
 
 /* Forward declaration of class PageTable */
 class PageTable;
@@ -41,8 +48,15 @@ class PageTable;
 class VMPool { /* Virtual Memory Pool */
 private:
    /* -- DEFINE YOUR VIRTUAL MEMORY POOL DATA STRUCTURE(s) HERE. */
+  unsigned long base_address;
+  unsigned long size;
+  FramePool* framePool;
+  PageTable* pageTable;
 
-public:
+  static const unsigned int _MAX_NO_REGIONS = FRAME_SIZE/sizeof(Allocated_Region);//define how many entries of allocated region can be stored on one frame
+  Allocated_Region* regions[_MAX_NO_REGIONS]; //currently allocated regions on the pool
+  unsigned int region_index; /*index of the next region to be registered*/  
+public:   
    VMPool(unsigned long _base_address,
           unsigned long _size,
           FramePool *_frame_pool,

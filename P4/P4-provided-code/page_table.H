@@ -17,7 +17,8 @@
 /* DEFINES */
 /*--------------------------------------------------------------------------*/
 
-/* -- (none) -- */
+#define KB * (0x1 << 10)
+#define FRAME_SIZE (4 KB)
 
 /*--------------------------------------------------------------------------*/
 /* INCLUDES */
@@ -32,7 +33,8 @@
 /* FORWARDS */
 /*--------------------------------------------------------------------------*/
 
-/* -- (none) -- */
+/* Forward declaration of class VMPool */
+class VMPool;
 
 /*--------------------------------------------------------------------------*/
 /* P A G E - T A B L E  */
@@ -51,12 +53,14 @@ private:
 
   /* DATA FOR CURRENT PAGE TABLE */
   unsigned long        * page_directory;     /* where is page directory located? */
+  
+  static const unsigned int _MAX_NO_POOLS = FRAME_SIZE/sizeof(VMPool*); //define how many entries of VM Pools can be stored on one frame
   VMPool** vm_pools; /*keeps track of all the registered vm pools*/
   unsigned int pool_index; /*index of the next vm pool to be registered*/
 
 public:
   static const unsigned int PAGE_SIZE        = Machine::PAGE_SIZE; /* in bytes */
-  static const unsigned int ENTRIES_PER_PAGE = Machine::PT_ENTRIES_PER_PAGE; /* in entries, duh! */
+  static const unsigned int ENTRIES_PER_PAGE = Machine::PT_ENTRIES_PER_PAGE; /* in entries, duh! */  
 
   static void init_paging(FramePool * _kernel_mem_pool,
                           FramePool * _process_mem_pool,
@@ -88,7 +92,7 @@ public:
   void free_page(unsigned long _page_no);
   /* Release the frame associated with the page _page_no */
 
-  void register_vmpool(VMPool *_pool);
+  void register_vmpool(VMPool * _pool);
   /* The page table needs to know about where it gets its pages from.
      For this, we have VMPools register with the page table. */
 

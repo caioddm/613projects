@@ -29,6 +29,7 @@ unsigned long PageTable::shared_size;
 unsigned int PageTable::paging_enabled; 
 const unsigned int PageTable::PAGE_SIZE;
 const unsigned int PageTable::ENTRIES_PER_PAGE;
+const unsigned int PageTable::_MAX_NO_POOLS;
 /* Static variables definition */
 
 void PageTable::init_paging(FramePool * _kernel_mem_pool, FramePool * _process_mem_pool, const unsigned long _shared_size){
@@ -62,7 +63,7 @@ PageTable::PageTable(){
 	page_directory[ENTRIES_PER_PAGE - 1] = (unsigned long)page_directory; //Sets the last entry on the page directory to point to the page directory itself
 	page_directory[ENTRIES_PER_PAGE - 1] |= 3;
 
-	vm_pools = (VMPool**) (process_mem_pool->get_frame() * PAGE_SIZE); //allocate the memory for the vm pools list
+	vm_pools = (VMPool**) (kernel_mem_pool->get_frame() * PAGE_SIZE); //allocate the memory for the vm pools list
 	pool_index = 0; //indicates that the vm pool is empty
 }
 
@@ -79,7 +80,16 @@ void PageTable::enable_paging(){
 void PageTable::handle_fault(REGS * _r){
 	unsigned long error_code = _r->err_code; 
 	unsigned long fault_addr = read_cr2();
-	/* read the error code and the fault address*/
+	int i;
+	for(i=0;i<current_page_table->pool_index;++i){ //check if the page is legitimate
+	    if(current_page_table->vm_pools[i]!=NULL)
+	        if (current_page_table->vm_pools[i]->is_legitimate(fault_addr))
+	            break;        
+    }
+
+    if(i == current_page_table->pool_index){ //the address is not legitimate
+    	Console::puts("Address not legitimate!\n");
+    }
 
 	int directory_entry = fault_addr >> 22; //gets the entry on the page directory
 	int table_entry = (fault_addr >> 12 & 0x03FF); //gets the entry on the corresponding page table
@@ -107,7 +117,9 @@ void PageTable::handle_fault(REGS * _r){
 			if(pt_addr == 0){
 				Console::puts("No frame available on the memory!\n");	
 			}
-			else{				
+			else{		
+				_page_directory[directory_entry] = (unsigned long) pt_addr; //map the created page table to the proper page directory entry
+				_page_directory[directory_entry] |= 3; // set entry to be present, supervisor level, and read/write		
 				unsigned long* page_table = (unsigned long *) (0xFFC00000 + (directory_entry * PAGE_SIZE)); //get the page table from the virtual address
 				for (int i = 0; i < ENTRIES_PER_PAGE; ++i)
 				{
@@ -119,11 +131,10 @@ void PageTable::handle_fault(REGS * _r){
 					Console::puts("No frame available on the memory!\n");			
 				}
 				else{
+					
 					page_table[table_entry] = addr; //map that frame to the page table entry
 					page_table[table_entry] |= 7; //set entry to be present, user level, and read/write
-
-					_page_directory[directory_entry] = (unsigned long) pt_addr; //map the created page table to the proper page directory entry
-					_page_directory[directory_entry] |= 3; // set entry to be present, supervisor level, and read/write	
+					
 				}				
 			}
 			
@@ -142,12 +153,14 @@ void PageTable::free_page(unsigned long _page_no){
 		process_mem_pool->release_frame(page_table[table_entry]); //release the frame corresponding to the page
 		page_table[table_entry] = 0; //clear the page table entry to indicate it is not valid anymore
 	}
-	else{
-		Console::puts("Page is already free");
-	}
 }
 
 void PageTable::register_vmpool(VMPool *_pool){
-	vm_pools[pool_index] = _pool; //register the virtual memory pool and increment the pool_index
-	pool_index++;
+	if(pool_index < _MAX_NO_POOLS){
+		vm_pools[pool_index] = _pool; //register the virtual memory pool and increment the pool_index
+		pool_index++;
+	}
+	else{
+		Console::puts("List of VM Pools is already full");	
+	}
 }

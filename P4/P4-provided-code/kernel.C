@@ -116,7 +116,6 @@ int main() {
     IRQ::init();
     InterruptHandler::init_dispatcher();
 
-
     /* -- EXAMPLE OF AN EXCEPTION HANDLER -- */
 
     class DBZ_Handler : public ExceptionHandler {
@@ -130,7 +129,6 @@ int main() {
     ExceptionHandler::register_handler(0, &dbz_handler);
 
     /* -- INITIALIZE FRAME POOLS -- */
-
     FramePool kernel_mem_pool(KERNEL_POOL_START_FRAME,
                               KERNEL_POOL_SIZE,
                               0);
@@ -141,7 +139,6 @@ int main() {
     process_mem_pool.mark_inaccessible(MEM_HOLE_START_FRAME, MEM_HOLE_SIZE);
 
     /* -- INITIALIZE MEMORY (PAGING) -- */
-
     PageTable::init_paging(&kernel_mem_pool,
                            &process_mem_pool,
                            4 MB);
@@ -149,11 +146,9 @@ int main() {
     PageTable pt1;
 
     pt1.load();
-
     PageTable::enable_paging();
 
     /* -- INITIALIZE THE TWO VIRTUAL MEMORY PAGE POOLS -- */
-
     VMPool code_pool(512 MB, 256 MB, &process_mem_pool, &pt1);
     VMPool heap_pool(1 GB, 256 MB, &process_mem_pool, &pt1);
     
@@ -202,6 +197,9 @@ void GenerateMemoryReferences(VMPool *pool, int size1, int size2)
 {
    current_pool = pool;
    for(int i=1; i<size1; i++) {
+      Console::puts("TEST: ");
+      Console::putui(i);
+      Console::puts("\n");
       int *arr = new int[size2 * i];
       if(pool->is_legitimate((unsigned long)arr) == FALSE) {
          TestFailed();
