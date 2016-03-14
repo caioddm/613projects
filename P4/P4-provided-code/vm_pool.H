@@ -36,6 +36,7 @@
 struct Allocated_Region{ //Struct to be used on the allocated regions list
   unsigned long base_address;
   unsigned long size;
+  BOOLEAN available;
 };
 
 /* Forward declaration of class PageTable */
@@ -54,7 +55,7 @@ private:
   PageTable* pageTable;
 
   static const unsigned int _MAX_NO_REGIONS = FRAME_SIZE/sizeof(Allocated_Region);//define how many entries of allocated region can be stored on one frame
-  Allocated_Region* regions[_MAX_NO_REGIONS]; //currently allocated regions on the pool
+  Allocated_Region regions[_MAX_NO_REGIONS]; //currently allocated regions on the pool
   unsigned int region_index; /*index of the next region to be registered*/  
 public:   
    VMPool(unsigned long _base_address,
