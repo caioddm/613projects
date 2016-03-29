@@ -6,18 +6,21 @@ Scheduler::Scheduler(){
 	/* Initialize the scheduler with an empty queue */
 }
 
-void Scheduler::yield(){
+void Scheduler::yield(){	
 	if(queue_size > 0){ //check if there is threads ready to run
+		Machine::disable_interrupts(); //disable interrupts to ensure mutual exclusion when managing the threads queue
 		Thread* t = queue->thread; //gets the next thread on the queue
 		TaskNode* tn = queue;
 		queue = queue->next; //removes the first element on the queue
 		delete tn;
 		queue_size--; //update the number of elements waiting on the queue
+		Machine::enable_interrupts(); // enable interrupts again once the queue has been updated
 		Thread::dispatch_to(t);// run new thread
-	}
+	}	
 }
 
 void Scheduler::enqueue(Thread * _thread){ //puts the thread on the end of the ready queue
+	Machine::disable_interrupts(); //disable interrupts to ensure mutual exclusion when managing the threads queue
 	if(queue_size == 0){
 		queue = new TaskNode(_thread); //queue is empty, so simply make the first element of the queue be _thread
 	}
@@ -29,6 +32,7 @@ void Scheduler::enqueue(Thread * _thread){ //puts the thread on the end of the r
 		temp->next = new TaskNode(_thread); //put _thread at the end of the list
 	}
 	queue_size++; //increment the size of the queue
+	Machine::enable_interrupts(); // enable interrupts again once the queue has been updated
 }
 
 void Scheduler::resume(Thread * _thread){
@@ -41,6 +45,7 @@ void Scheduler::add(Thread * _thread){
 
 void Scheduler::terminate(Thread * _thread){
 	if(queue_size > 0){
+		Machine::disable_interrupts(); //disable interrupts to ensure mutual exclusion when managing the threads queue
 		TaskNode* temp = queue;
 		if(temp->thread->ThreadId()==_thread->ThreadId()){ //task to terminate is the first in the list
 			queue = temp->next;
@@ -60,7 +65,8 @@ void Scheduler::terminate(Thread * _thread){
 				}
 				temp = temp->next;
 			}
-		}		
+		}
+		Machine::enable_interrupts(); // enable interrupts again once the queue has been updated	
 	}
 	yield();
 }

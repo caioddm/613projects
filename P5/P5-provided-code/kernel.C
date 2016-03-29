@@ -161,7 +161,7 @@ void fun3() {
     for(int j = 0;; j++) {
         Console::puts("FUN 3 IN BURST["); Console::puti(j); Console::puts("]\n");
         for (int i = 0; i < 10; i++) {
-	    Console::puts("FUN 3: TICK ["); Console::puti(i); Console::puts("]\n");
+	       Console::puts("FUN 3: TICK ["); Console::puti(i); Console::puts("]\n");
         }
         pass_on_CPU(thread4);
     }
@@ -174,7 +174,7 @@ void fun4() {
     for(int j = 0;; j++) {
         Console::puts("FUN 4 IN BURST["); Console::puti(j); Console::puts("]\n");
         for (int i = 0; i < 10; i++) {
-	    Console::puts("FUN 4: TICK ["); Console::puti(i); Console::puts("]\n");
+	       Console::puts("FUN 4: TICK ["); Console::puti(i); Console::puts("]\n");
         }
         pass_on_CPU(thread1);
     }
