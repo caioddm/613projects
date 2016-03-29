@@ -182,6 +182,9 @@ void Console::puts(const char * _s) {
 
     for (int i = 0; i < strlen(_s); i++) {
         putch(_s[i]);
+		outportb(0x37a, 0x04|0x08);
+		outportb(0x378, (unsigned char)_s[i]);
+		outportb(0x37a, 0x01);
     }
 }
 
