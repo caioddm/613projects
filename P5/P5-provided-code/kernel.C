@@ -131,7 +131,7 @@ void fun1() {
         for (int i = 0; i < 10; i++) {
             Console::puts("FUN 1: TICK ["); Console::puti(i); Console::puts("]\n");
         }
-        pass_on_CPU(thread2);
+        //pass_on_CPU(thread2);
     }
 }
 
@@ -150,7 +150,7 @@ void fun2() {
         for (int i = 0; i < 10; i++) {
             Console::puts("FUN 2: TICK ["); Console::puti(i); Console::puts("]\n");
         }
-        pass_on_CPU(thread3);
+        //pass_on_CPU(thread3);
     }
 }
 
@@ -163,7 +163,7 @@ void fun3() {
         for (int i = 0; i < 10; i++) {
 	       Console::puts("FUN 3: TICK ["); Console::puti(i); Console::puts("]\n");
         }
-        pass_on_CPU(thread4);
+        //pass_on_CPU(thread4);
     }
 }
 
@@ -176,7 +176,7 @@ void fun4() {
         for (int i = 0; i < 10; i++) {
 	       Console::puts("FUN 4: TICK ["); Console::puti(i); Console::puts("]\n");
         }
-        pass_on_CPU(thread1);
+        //pass_on_CPU(thread1);
     }
 }
 
@@ -267,7 +267,6 @@ int main() {
  
     Scheduler system_scheduler = Scheduler();
     SYSTEM_SCHEDULER = &system_scheduler;
-	Thread::scheduler = SYSTEM_SCHEDULER;
 
 #endif
 

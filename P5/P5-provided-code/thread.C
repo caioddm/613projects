@@ -43,6 +43,7 @@
 /* EXTERNS */
 /*--------------------------------------------------------------------------*/
 
+extern Scheduler * SYSTEM_SCHEDULER; //use the global variable declared in kernel.c
 Thread * current_thread = 0;
 /* Pointer to the currently running thread. This is used by the scheduler,
    for example. */
@@ -52,8 +53,6 @@ Thread * current_thread = 0;
 /* -------------------------------------------------------------------------*/
 
 int Thread::nextFreePid;
-
-Scheduler* Thread::scheduler;
 
 /* -------------------------------------------------------------------------*/
 /* LOCAL FUNCTIONS */
@@ -72,16 +71,18 @@ inline void Thread::push(unsigned long _val) {
 /* LOCAL FUNCTIONS TO START/SHUTDOWN THREADS. */
 
 static void thread_shutdown() {
-	Thread::scheduler->terminate(current_thread);
+	SYSTEM_SCHEDULER->terminate(current_thread);
 }
 
 static void thread_start() {
      /* This function is used to release the thread for execution in the ready queue. */    
-     
-    Machine::enable_interrupts(); //enable interruptions once the thread is about to start
+     if(!Machine::interrupts_enabled())
+        Machine::enable_interrupts(); //enable interruptions once the thread is about to start
 }
 
 void Thread::setup_context(Thread_Function _tfunction){
+    if(Machine::interrupts_enabled())
+        Machine::disable_interrupts(); //disable interrupts always that a new thread is being constructed
     /* Sets up the initial context for the given kernel-only thread. 
        The thread is supposed the call the function _tfunction upon start.
     */
@@ -149,6 +150,7 @@ void Thread::setup_context(Thread_Function _tfunction){
     Console::puts("esp = "); Console::putui((unsigned int)esp); Console::puts("\n");
 
     Console::puts("done\n");
+    //Machine::enable_interrupts(); //enable interruptions once the thread is about to start
 }
 
 /*--------------------------------------------------------------------------*/
