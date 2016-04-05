@@ -86,8 +86,6 @@ public:
     static Thread * CurrentThread();
     /* Returns the currently running thread. NULL if no thread has started 
        yet. */
-	   
-	static Scheduler* scheduler;
 };
 
 #endif

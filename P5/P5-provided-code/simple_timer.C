@@ -23,6 +23,7 @@
 #include "console.H"
 #include "interrupts.H"
 #include "simple_timer.H"
+#include "scheduler.H"
 
 /*--------------------------------------------------------------------------*/
 /* EXTERNS */
@@ -62,6 +63,7 @@ void SimpleTimer::handle_interrupt(REGS *_r) {
     /* Increment our "ticks" count */
     ticks++;
 
+    #ifdef SCHE_ROUND_ROBIN // use round robin scheduling
     /* Whenever a second is over, we update counter accordingly. */
     if (ticks >= hz/20) //compute if 50ms has passed
     {
@@ -73,6 +75,14 @@ void SimpleTimer::handle_interrupt(REGS *_r) {
 
 
     }
+    #else //use FIFO scheduling
+    if (ticks >= hz) //compute if 50ms has passed
+    {
+        seconds++;
+        ticks = 0;
+        Console::puts("one second has passed! Switcth thread\n");
+    }
+    #endif
 }
 
 

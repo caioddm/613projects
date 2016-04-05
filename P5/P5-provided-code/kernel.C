@@ -131,7 +131,9 @@ void fun1() {
         for (int i = 0; i < 10; i++) {
             Console::puts("FUN 1: TICK ["); Console::puti(i); Console::puts("]\n");
         }
-        //pass_on_CPU(thread2);
+        //#ifndef SCHE_ROUND_ROBIN // use FIFO scheduling
+        pass_on_CPU(thread2);
+        //#endif
     }
 }
 
@@ -150,7 +152,9 @@ void fun2() {
         for (int i = 0; i < 10; i++) {
             Console::puts("FUN 2: TICK ["); Console::puti(i); Console::puts("]\n");
         }
-        //pass_on_CPU(thread3);
+        //#ifndef SCHE_ROUND_ROBIN // use FIFO scheduling
+        pass_on_CPU(thread3);
+        //#endif
     }
 }
 
@@ -163,7 +167,9 @@ void fun3() {
         for (int i = 0; i < 10; i++) {
 	       Console::puts("FUN 3: TICK ["); Console::puti(i); Console::puts("]\n");
         }
-        //pass_on_CPU(thread4);
+        //#ifndef SCHE_ROUND_ROBIN // use FIFO scheduling
+        pass_on_CPU(thread4);
+        //#endif
     }
 }
 
@@ -176,7 +182,9 @@ void fun4() {
         for (int i = 0; i < 10; i++) {
 	       Console::puts("FUN 4: TICK ["); Console::puti(i); Console::puts("]\n");
         }
-        //pass_on_CPU(thread1);
+        //#ifndef SCHE_ROUND_ROBIN // use FIFO scheduling
+        pass_on_CPU(thread1);
+        //#endif
     }
 }
 
