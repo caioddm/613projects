@@ -26,7 +26,7 @@
 /* INCLUDES */
 /*--------------------------------------------------------------------------*/
 
-/* -- (none) -- */
+#include "console.H"
 
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */ 
@@ -61,7 +61,8 @@ protected:
      /* Return TRUE if disk is ready to transfer data from/to disk, FALSE otherwise. */
 
      virtual void wait_until_ready() {
-        while (!is_ready()) { /* wait */; }
+        while (!is_ready()) { Console::puts("waiting...\n"); }
+        Console::puts("READY!!!\n");
      }
      /* Is called after each read/write operation to check whether the disk is
         ready to start transfering the data from/to the disk. */

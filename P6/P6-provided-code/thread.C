@@ -35,6 +35,7 @@
 #include "frame_pool.H"
 
 #include "thread.H"
+#include "scheduler.H"
 
 #include "threads_low.H"
 
@@ -42,6 +43,7 @@
 /* EXTERNS */
 /*--------------------------------------------------------------------------*/
 
+extern Scheduler * SYSTEM_SCHEDULER; //use the global variable declared in kernel.c
 Thread * current_thread = 0;
 /* Pointer to the currently running thread. This is used by the scheduler,
    for example. */
@@ -69,24 +71,18 @@ inline void Thread::push(unsigned long _val) {
 /* LOCAL FUNCTIONS TO START/SHUTDOWN THREADS. */
 
 static void thread_shutdown() {
-    /* This function should be called when the thread returns from the thread function.
-       It terminates the thread by releasing memory and any other resources held by the thread. 
-       This is a bit complicated because the thread termination interacts with the scheduler.
-     */
-
-    assert(FALSE);
-    /* Let's not worry about it for now. 
-       This means that we should have non-terminating thread functions. 
-    */
+	SYSTEM_SCHEDULER->terminate(current_thread);
 }
 
 static void thread_start() {
-     /* This function is used to release the thread for execution in the ready queue. */
-    
-     /* We need to add code, but it is probably nothing more than enabling interrupts. */
+     /* This function is used to release the thread for execution in the ready queue. */    
+     if(!machine_interrupts_enabled())
+        machine_enable_interrupts(); //enable interruptions once the thread is about to start
 }
 
 void Thread::setup_context(Thread_Function _tfunction){
+    if(machine_interrupts_enabled())
+        machine_disable_interrupts(); //disable interrupts always that a new thread is being constructed
     /* Sets up the initial context for the given kernel-only thread. 
        The thread is supposed the call the function _tfunction upon start.
     */
@@ -154,6 +150,7 @@ void Thread::setup_context(Thread_Function _tfunction){
     Console::puts("esp = "); Console::putui((unsigned int)esp); Console::puts("\n");
 
     Console::puts("done\n");
+    //Machine::enable_interrupts(); //enable interruptions once the thread is about to start
 }
 
 /*--------------------------------------------------------------------------*/
@@ -199,8 +196,13 @@ void Thread::dispatch_to(Thread * _thread) {
 */
 
     /* The value of 'current_thread' is modified inside 'threads_low_switch_to()'. */
+    if(machine_interrupts_enabled()) //disable interrupts prior to a context switch
+        machine_disable_interrupts();
 
     threads_low_switch_to(_thread);
+
+    if(!machine_interrupts_enabled())
+        machine_enable_interrupts(); //enable interruptions once the switch is done
 
     /* The call does not return until after the thread is context-switched back in. */
 }

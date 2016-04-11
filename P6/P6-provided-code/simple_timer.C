@@ -6,7 +6,6 @@
             Texas A&M University
     Date  : 09/03/19
 
-    Simple control of the 
 */
 
 /*--------------------------------------------------------------------------*/
@@ -24,6 +23,13 @@
 #include "console.H"
 #include "interrupts.H"
 #include "simple_timer.H"
+#include "scheduler.H"
+
+/*--------------------------------------------------------------------------*/
+/* EXTERNS */
+/*--------------------------------------------------------------------------*/
+
+    extern Scheduler * SYSTEM_SCHEDULER; //use the global variable declared in kernel.c
 
 /*--------------------------------------------------------------------------*/
 /* CONSTRUCTOR */
@@ -57,13 +63,26 @@ void SimpleTimer::handle_interrupt(REGS *_r) {
     /* Increment our "ticks" count */
     ticks++;
 
+    #ifdef SCHE_ROUND_ROBIN // use round robin scheduling
     /* Whenever a second is over, we update counter accordingly. */
-    if (ticks >= hz )
+    if (ticks >= hz/20) //compute if 50ms has passed
     {
         seconds++;
         ticks = 0;
-        Console::puts("One second has passed\n");
+        Console::puts("50 ms has passed! Switcth thread\n");
+        SYSTEM_SCHEDULER->resume(Thread::CurrentThread()); //put the current thread at the end of the list
+        SYSTEM_SCHEDULER->yield(); //pass the cpu to the next thread on teh queue
+
+
     }
+    #else //use FIFO scheduling
+    if (ticks >= hz) //compute if 50ms has passed
+    {
+        seconds++;
+        ticks = 0;
+        Console::puts("one second has passed! Switcth thread\n");
+    }
+    #endif
 }
 
 

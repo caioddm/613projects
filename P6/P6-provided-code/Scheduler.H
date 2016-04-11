@@ -15,21 +15,33 @@
 /* DEFINES 
 /*--------------------------------------------------------------------------*/
 
+#define SCHE_ROUND_ROBIN //enable round robin scheduling
+
 /*--------------------------------------------------------------------------*/
 /* INCLUDES 
 /*--------------------------------------------------------------------------*/
 
 #include "machine.H"
 #include "thread.H"
+#include "utils.H"
+#include "console.H"
 
 /*--------------------------------------------------------------------------*/
 /* SCHEDULER
 /*--------------------------------------------------------------------------*/
 
+struct TaskNode{ //data structure to hold the queue of tasks ready
+	Thread *thread;
+	TaskNode *next;
+	TaskNode(Thread* t) : thread(t){}
+};
+
 class Scheduler {
 
    /* The scheduler may need private members... */
-
+	int queue_size; //store how many elements are on the queue;
+	TaskNode* queue; //store the queue
+	void enqueue(Thread* _thread);
 public:
 
    Scheduler();

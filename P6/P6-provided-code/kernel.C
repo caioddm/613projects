@@ -20,14 +20,14 @@
 
 /* -- COMMENT/UNCOMMENT THE FOLLOWING LINE TO EXCLUDE/INCLUDE SCHEDULER CODE */
 
-//#define _USES_SCHEDULER_
+#define _USES_SCHEDULER_
 /* This macro is defined when we want to force the code below to use 
    a scheduler.
    Otherwise, no scheduler is used, and the threads pass control to each 
    other in a co-routine fashion.
 */
 
-#define _USES_DISK_
+//#define _USES_DISK_
 /* This macro is defined when we want to exercise the disk device.
    If defined, the system defines a disk and has Thread 2 read from it.
    Leave the macro undefined if you don't want to exercise the disk code.
@@ -133,7 +133,7 @@ void pass_on_CPU(Thread * _to_thread) {
         /* We use a scheduler. Instead of dispatching to the next thread,
            we pre-empt the current thread by putting it onto the ready
            queue and yielding the CPU. */
-
+        Console::puts("pass on called!!\n");
         SYSTEM_SCHEDULER->resume(Thread::CurrentThread()); 
         SYSTEM_SCHEDULER->yield();
 #endif
