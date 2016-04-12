@@ -65,6 +65,7 @@
 
 #ifdef _USES_DISK_
 #include "simple_disk.H"
+#include "blocking_disk.H"
 #endif
 
 #ifdef _USES_FILESYSTEM_
@@ -99,7 +100,7 @@ Scheduler * SYSTEM_SCHEDULER;
 #ifdef _USES_DISK_
 
 /* -- A POINTER TO THE SYSTEM DISK */
-SimpleDisk * SYSTEM_DISK;
+BlockingDisk * SYSTEM_DISK;
 
 #define SYSTEM_DISK_SIZE 10485760
 
@@ -133,7 +134,7 @@ void pass_on_CPU(Thread * _to_thread) {
         /* We use a scheduler. Instead of dispatching to the next thread,
            we pre-empt the current thread by putting it onto the ready
            queue and yielding the CPU. */
-
+        Console::puts("Scheduling ...\n");
         SYSTEM_SCHEDULER->resume(Thread::CurrentThread()); 
         SYSTEM_SCHEDULER->yield();
 #endif
@@ -377,7 +378,7 @@ int main() {
 
     /* -- DISK DEVICE -- IF YOU HAVE ONE -- */
 
-    SimpleDisk system_disk = SimpleDisk(MASTER, SYSTEM_DISK_SIZE);
+    BlockingDisk system_disk = BlockingDisk(MASTER, SYSTEM_DISK_SIZE);
     SYSTEM_DISK = &system_disk;
 
 #endif
