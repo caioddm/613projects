@@ -49,6 +49,9 @@ simple_timer.o: simple_timer.C simple_timer.H
 
 simple_disk.o: simple_disk.C simple_disk.H
 	$(CPP) $(CPP_OPTIONS) -c -o simple_disk.o simple_disk.C
+	
+#blocking_disk.o: blocking_disk.C blocking_disk.H
+#	$(CPP) $(CPP_OPTIONS) -c -o blocking_disk.o blocking_disk.C
 
 # ==== MEMORY =====
 

@@ -24,10 +24,10 @@ class BlockingDisk : public SimpleDisk{
            or SLAVE slot of the primary ATA controller. */
 
         /*DISK OPERATIONS */
-        virtual void read(unsigned long _block_no, char * _buf);
+        void read(unsigned long _block_no, unsigned char * _buf);
         /* Reads 512 Bytes from the given block of the disk and copies them
             to the given buffer. No error check! */
-        virtual void write(unsigned long _block_no, char * _buf);
+        void write(unsigned long _block_no, unsigned char * _buf);
         /* Writes 512 Bytes from the buffer to the given block on the disk. */
 
 };

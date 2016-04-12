@@ -15,7 +15,7 @@
 /* DEFINES 
 /*--------------------------------------------------------------------------*/
 
-#define SCHE_ROUND_ROBIN //enable round robin scheduling
+//#define SCHE_ROUND_ROBIN //enable round robin scheduling
 
 /*--------------------------------------------------------------------------*/
 /* INCLUDES 

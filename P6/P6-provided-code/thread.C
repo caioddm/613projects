@@ -196,13 +196,13 @@ void Thread::dispatch_to(Thread * _thread) {
 */
 
     /* The value of 'current_thread' is modified inside 'threads_low_switch_to()'. */
-    if(machine_interrupts_enabled()) //disable interrupts prior to a context switch
-        machine_disable_interrupts();
+    //if(machine_interrupts_enabled()) //disable interrupts prior to a context switch
+    //    machine_disable_interrupts();
 
     threads_low_switch_to(_thread);
 
-    if(!machine_interrupts_enabled())
-        machine_enable_interrupts(); //enable interruptions once the switch is done
+    //if(!machine_interrupts_enabled())
+    //    machine_enable_interrupts(); //enable interruptions once the switch is done
 
     /* The call does not return until after the thread is context-switched back in. */
 }
