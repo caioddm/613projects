@@ -65,7 +65,7 @@ void SimpleTimer::handle_interrupt(REGS *_r) {
 
     #ifdef SCHE_ROUND_ROBIN // use round robin scheduling
     /* Whenever a second is over, we update counter accordingly. */
-    if (ticks >= hz/20) //compute if 50ms has passed
+    if (ticks >= hz) //compute if 50ms has passed
     {
         seconds++;
         ticks = 0;

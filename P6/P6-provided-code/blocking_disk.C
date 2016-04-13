@@ -8,8 +8,9 @@ BlockingDisk::BlockingDisk(DISK_ID _disk_id, unsigned int _size): SimpleDisk(_di
 void BlockingDisk::wait_until_ready() {
   while (!is_ready()) 
   { 
-    SYSTEM_SCHEDULER->resume(Thread::CurrentThread()); //put the current thread at the end of the list
-    SYSTEM_SCHEDULER->yield(); //pass the cpu to the next thread on teh queue
+    //when waiting for the disk operation to be ready, we will emqueue this thread on the blocked queue and yield the CPU to the next available thread
+    SYSTEM_SCHEDULER->resumeBlocked(Thread::CurrentThread());
+    SYSTEM_SCHEDULER->yield(); //pass the cpu to the next thread on the queue
   }
 }
 /*

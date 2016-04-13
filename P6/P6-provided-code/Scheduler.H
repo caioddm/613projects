@@ -15,7 +15,7 @@
 /* DEFINES 
 /*--------------------------------------------------------------------------*/
 
-//#define SCHE_ROUND_ROBIN //enable round robin scheduling
+#define SCHE_ROUND_ROBIN //enable round robin scheduling
 
 /*--------------------------------------------------------------------------*/
 /* INCLUDES 
@@ -40,10 +40,13 @@ class Scheduler {
 
    /* The scheduler may need private members... */
 	int queue_size; //store how many elements are on the queue;
+   int blocked_queue_size; //store how many elements are on the blocked threads queue;
 	TaskNode* queue; //store the queue
+   TaskNode* blockedQueue; //store the queue of blocked threads
 	void enqueue(Thread* _thread);
+   void enqueueBlocked(Thread* _thread);
 public:
-
+   void printLists(TaskNode* queue, TaskNode* blockedQueue);
    Scheduler();
    /* Setup the scheduler. This sets up the ready queue, for example.
       If the scheduler implements some sort of round-robin scheme, then the 
@@ -55,6 +58,7 @@ public:
       the CPU, and calls the dispatcher function defined in 'threads.h' to
       do the context switch. */
 
+   virtual void resumeBlocked(Thread * _thread);
    virtual void resume(Thread * _thread);
    /* Add the given thread to the ready queue of the scheduler. This is called
       for threads that were waiting for an event to happen, or that have 
