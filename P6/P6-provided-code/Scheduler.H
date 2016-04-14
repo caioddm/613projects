@@ -46,7 +46,6 @@ class Scheduler {
 	void enqueue(Thread* _thread);
    void enqueueBlocked(Thread* _thread);
 public:
-   void printLists(TaskNode* queue, TaskNode* blockedQueue);
    Scheduler();
    /* Setup the scheduler. This sets up the ready queue, for example.
       If the scheduler implements some sort of round-robin scheme, then the 
@@ -58,7 +57,7 @@ public:
       the CPU, and calls the dispatcher function defined in 'threads.h' to
       do the context switch. */
 
-   virtual void resumeBlocked(Thread * _thread);
+   virtual void resumeBlocked(Thread * _thread); //called whenever we want to resume a thread waiting for an blocking disk operation
    virtual void resume(Thread * _thread);
    /* Add the given thread to the ready queue of the scheduler. This is called
       for threads that were waiting for an event to happen, or that have 

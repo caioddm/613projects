@@ -414,8 +414,8 @@ int main() {
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 2...");
-    char * stack2 = new char[1024];
-    thread2 = new Thread(fun2, stack2, 1024);
+    char * stack2 = new char[4096];
+    thread2 = new Thread(fun2, stack2, 4096);
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 3...");

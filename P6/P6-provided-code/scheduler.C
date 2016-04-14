@@ -8,12 +8,18 @@ Scheduler::Scheduler(){
 
 void Scheduler::yield(){	
 	if(queue_size > 0){ //check if there is threads ready to run
+		if(machine_interrupts_enabled())
+			machine_disable_interrupts();
+
 		Thread* t = queue->thread; //gets the next thread on the queue
 		TaskNode* tn = queue;
 		queue = queue->next; //removes the first element on the queue
 		delete tn;
 		queue_size--; //update the number of elements waiting on the queue
 		Thread::dispatch_to(t);// run new thread
+
+		if(!machine_interrupts_enabled())
+			machine_enable_interrupts();			
 	}	
 }
 
@@ -46,6 +52,9 @@ void Scheduler::enqueueBlocked(Thread * _thread){ //the same functionality of th
 }
 
 void Scheduler::resume(Thread * _thread){
+	if(machine_interrupts_enabled())
+		machine_disable_interrupts();
+	
 	enqueue(_thread); //enqueue _thread
 	if(blocked_queue_size > 0){ //whenever we are resuming a thread, we will check if there is any I/O blocked thread and put it at the start of of the ready queue to pool it.
 		TaskNode* tn = blockedQueue; //gets the next thread on the blocked queue
@@ -56,46 +65,36 @@ void Scheduler::resume(Thread * _thread){
 		/* make the blocked thread the first on the ready queue */
 		queue_size++;
 	}
-}
 
-void Scheduler::printLists(TaskNode* queue, TaskNode* blockedQueue){
-	if(queue_size > 0){
-		TaskNode* temp = queue;
-		Console::puts("Queue: ");
-		Console::putui((unsigned int)temp->thread);
-		Console::puts(" ");
-		while(temp->next != NULL){
-			temp = temp->next; //traverse the list until you reach the end of it
-			Console::putui((unsigned int)temp->thread);
-			Console::puts(" ");
-		}
-	}
-	if(blocked_queue_size > 0){
-		TaskNode* temp = blockedQueue;
-		Console::puts("\nBlocked Queue: ");
-		Console::putui((unsigned int)temp->thread);
-		Console::puts(" ");
-		while(temp->next != NULL){
-			temp = temp->next; //traverse the list until you reach the end of it
-			Console::putui((unsigned int)temp->thread);
-			Console::puts(" ");
-		}
-	}
-	Console::puts("\n");
+	if(!machine_interrupts_enabled())
+		machine_enable_interrupts();
 }
 
 void Scheduler::resumeBlocked(Thread * _thread){
+	if(machine_interrupts_enabled())
+		machine_disable_interrupts();
+	
 	enqueueBlocked(_thread); //enqueue _thread into the blocked thread queue
+
+	if(!machine_interrupts_enabled())
+		machine_enable_interrupts();
 }
 
 void Scheduler::add(Thread * _thread){
+	if(machine_interrupts_enabled())
+		machine_disable_interrupts();
+
 	enqueue(_thread); //enqueue _thread
+
+	if(!machine_interrupts_enabled())
+		machine_enable_interrupts();
 }
 
 void Scheduler::terminate(Thread * _thread){
-	
-
 	if(queue_size > 0){
+		if(machine_interrupts_enabled())
+			machine_disable_interrupts();
+
 		TaskNode* temp = queue;
 		if(temp->thread->ThreadId()==_thread->ThreadId()){ //task to terminate is the first in the list
 			queue = temp->next;
@@ -115,7 +114,9 @@ void Scheduler::terminate(Thread * _thread){
 				}
 				temp = temp->next;
 			}
-		}	
+		}
+		if(!machine_interrupts_enabled())
+			machine_enable_interrupts();	
 	}
 	yield();
 	
