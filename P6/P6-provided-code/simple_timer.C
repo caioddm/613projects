@@ -35,6 +35,9 @@
 /* CONSTRUCTOR */
 /*--------------------------------------------------------------------------*/
 
+
+unsigned long SimpleTimer::seconds;
+int           SimpleTimer::ticks;
 SimpleTimer::SimpleTimer(int _hz) {
   /* How long has the system been running? */
   seconds =  0; 

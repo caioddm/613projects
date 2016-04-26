@@ -33,7 +33,7 @@
    Leave the macro undefined if you don't want to exercise the disk code.
 */
 
-//#define _USES_FILESYSTEM_
+#define _USES_FILESYSTEM_
 /* This macro is defined when we want to exercise file-system code.
    If defined, the system defines a file system, and Thread 3 issues 
    issues operations to it.
@@ -150,12 +150,12 @@ void pass_on_CPU(Thread * _to_thread) {
 int rand() {
   /* Rather silly random number generator. */
 
-  unsigned long dummy_sec;
-  int           dummy_tic;
+  unsigned long* dummy_sec;
+  int*           dummy_tic;
 
   SimpleTimer::current(dummy_sec, dummy_tic);
 
-  return dummy_tic;
+  return (*dummy_tic);
 }
 
 void exercise_file_system(FileSystem * _file_system, SimpleDisk * _simple_disk) {
@@ -253,8 +253,8 @@ void fun3() {
 
 #ifdef _USES_FILESYSTEM_
 
-    exercise_file_system(FILE_SYSTEM);
-
+    exercise_file_system(FILE_SYSTEM, (SimpleDisk*)SYSTEM_DISK);
+	pass_on_CPU(thread4);
 #else
 
      for(int j = 0;; j++) {
@@ -264,10 +264,10 @@ void fun3() {
        for (int i = 0; i < 10; i++) {
 	  Console::puts("FUN 3: TICK ["); Console::puti(i); Console::puts("]\n");
        }
-    
+		pass_on_CPU(thread4);
+	}
 #endif
-       pass_on_CPU(thread4);
-    }
+       
 }
 
 void fun4() {

@@ -32,8 +32,8 @@ class SimpleTimer : public InterruptHandler {
 private:
 
   /* How long has the system been running? */
-  unsigned long seconds; 
-  int           ticks;   /* ticks since last "seconds" update.    */
+  static unsigned long seconds; 
+  static int           ticks;   /* ticks since last "seconds" update.    */
 
   /* At what frequency do we update the ticks counter? */
   int hz;                /* Actually, by defaults it is 18.22Hz.
@@ -53,7 +53,7 @@ public :
      when the system gets initialized. (e.g. in "kernel.C")  
   */
 
-  void current(unsigned long * _seconds, int * _ticks);
+  static void current(unsigned long * _seconds, int * _ticks);
   /* Return the current "time" since the system started. */
 
   void wait(unsigned long _seconds);
