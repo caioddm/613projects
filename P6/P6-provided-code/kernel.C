@@ -254,7 +254,7 @@ void fun3() {
 #ifdef _USES_FILESYSTEM_
 
     exercise_file_system(FILE_SYSTEM, (SimpleDisk*)SYSTEM_DISK);
-	pass_on_CPU(thread4);
+    pass_on_CPU(thread4);
 #else
 
      for(int j = 0;; j++) {

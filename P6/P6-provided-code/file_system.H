@@ -4,22 +4,22 @@
 #define BLOCK_SIZE 512
 #define SYSTEM_DISK_SIZE 10485760
 #define SYSTEM_BLOCKS (SYSTEM_DISK_SIZE/BLOCK_SIZE)
-#define HEADER_SIZE 12
+#define HEADER_SIZE 8
 
 #define FREE    0x0000
 #define USED    0xFFFF
-#define BLOCK_DATA_SIZE 125 //bytes
+#define BLOCK_DATA_SIZE 126 //126*4 bytes
 
 class FileSystem;
 extern FileSystem* FILE_SYSTEM;
 /* forward declaration of file system class and global variable*/
 
-static unsigned char disk_buffer[BLOCK_SIZE];//for input and output with system disk
+static unsigned char disk_buffer[BLOCK_SIZE];//used for transfering data with the hard disk
 struct DiskBlock{
 	unsigned int id; //file id
 	unsigned int availability;//used or free
-	unsigned int size;//number of blocks the file has
-	unsigned int data[125];//block data
+	unsigned int data[126];//block file data
+	/*each file is contained in one block, and each block has a 8 byte header, made of the file id and availability*/
 };
 
 static DiskBlock* disk_block=(DiskBlock*)disk_buffer;//cast disk buffer to the DiskBlock struct to access the variables
@@ -29,12 +29,9 @@ class File {
 	/* -- your file data structures here ... */
 	//FileSystem   * file_system;
 
-     unsigned int   info_block_num;//block containing file metadata
      unsigned int   file_id;
-     unsigned int   file_size; // size of file in blocks
-     unsigned int*  block_nums;//pointers to file blocks
-     unsigned int   current_block; //current block position
-     unsigned int   current_position; //current position in currrent block
+     unsigned int 	block_num; //number of the block containing the file
+     unsigned int   current_position; //current position in the block
 	
 	public:
 	File();
@@ -68,7 +65,7 @@ class FileSystem {
 	friend class File;
 	/* your file system data structures here ... */
 	 SimpleDisk * disk; //disk accessed by the file system
-     unsigned int size; //size of the file system
+     static unsigned int size; //size of the file system
      unsigned int blocks_available; //block to look for free blocks
 	 File* files; //keeps track of the files in the file system
 	 unsigned int files_size; //number of files in the file system
@@ -102,7 +99,7 @@ class FileSystem {
 	/* Delete file with given id in the file system and free any
 	* disk block occupied by the file.
 	*/
-	unsigned int AllocateBlock();
+	int AllocateBlock();
 	/* Allocates a block from free list, for use in file */
 	void FreeBlock(unsigned int block_index);
 	/* Deallocates a block from free list, for use in file */
