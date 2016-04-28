@@ -31,9 +31,10 @@ class File {
 
      unsigned int   file_id;
      unsigned int 	block_num; //number of the block containing the file
-     unsigned int   current_position; //current position in the block
-	
+     
+	 BOOLEAN busy; //variable used for thread-safe file access
 	public:
+	unsigned int   current_position; //current position in the block
 	File();
 	File(unsigned int fileID);
 	/* Constructor for the file handle. Set the ’current position’
@@ -69,7 +70,7 @@ class FileSystem {
      unsigned int blocks_available; //block to look for free blocks
 	 File* files; //keeps track of the files in the file system
 	 unsigned int files_size; //number of files in the file system
-	 
+	 static BOOLEAN busy; //variable used for thread-safe file system access
 	public:
 	FileSystem();
 	/* Just initializes local data structures.

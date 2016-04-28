@@ -158,9 +158,328 @@ int rand() {
   return (*dummy_tic);
 }
 
+void exercise_file1(FileSystem * _file_system)
+{
+  /* TESTS FOR FIRST FILE */
+  unsigned int file_id = 1;
+  Console::puts("CREATING FILE..\n");
+  _file_system->CreateFile(file_id); //create file with id 1
+  Console::puts("FILE CREATED!\n");
+
+  File* f;
+  Console::puts("LOOKING UP FILE..\n");
+  BOOLEAN found = _file_system->LookupFile(file_id, f); //make sure the file was created properly
+  if(found)
+    Console::puts("FILE FOUND!\n");
+  else
+    Console::puts("ERROR, FILE NOT FOUND!\n");
+
+  char* buf;
+  for (int i = 0; i < 504; ++i) //create buffer to be written on the file
+  {
+    char* ch;
+    int2str(i, ch);
+    buf[i] = (char)(*ch);
+  }
+
+  Console::puts("WRITING TO FILE..\n");
+  f->Write(504, buf); //write 504 bytes to file
+  Console::puts("WRITTEN TO FILE!\n");
+
+  Console::puts("READING FROM FILE..\n");
+  f->Reset();//reset the current position pointer to the beginning of the file
+  f->Read(504, buf); //read the 504 bytes from file
+
+  for (int i = 0; i < 504; ++i) //check if the read results are the expected ones
+  {
+    char* ch;
+    int2str(i, ch);
+    if(buf[i] != (*ch))
+      Console::puts("ERROR, READ CHARACTER IS NOT THE EXPECTED!\n");
+  }
+  Console::puts("READ FROM FILE!\n");
+
+
+  
+  //Reset file
+  Console::puts("RESETTING FILE..\n");
+  f->Reset();
+  Console::puts("FILE RESETED!\n");
+
+
+
+  Console::puts("WRITING TO FILE..\n");
+  f->Write(504, buf); //write 504 bytes to file
+  Console::puts("WRITTEN TO FILE!\n");
+
+  // Test if reached end of file 
+  Console::puts("Is EOF? (Expected 1) Actual: ");
+  unsigned int eof = f->EoF();
+  if(eof)
+    Console::puts("1\n");
+  else
+    Console::puts("0\n");
+
+  //Write and Read when the position is already at the end of file
+  Console::puts("WRITING TO FILE WITHOUT RESETTING, EXPECTED ERROR MESSAGE..\n");
+  f->Write(504, buf); //write 504 bytes to file
+
+  Console::puts("READING FROM FILE WITHOUT RESETTING, EXPECTED WARNING MESSAGE\n");
+  f->Read(504, buf); //read the 504 bytes from file
+
+  
+
+  // Rewrite file
+  Console::puts("REWRITING FILE..\n");
+  f->Rewrite();
+  Console::puts("FILE REWRITTEN!\n");
+
+  // Test if reached end of file 
+  Console::puts("Is EOF? (Expected 0) Actual: ");
+  eof = f->EoF();
+  if(eof)
+    Console::puts("1\n");
+  else
+    Console::puts("0\n");
+
+  //write to file after rewriting it, should be ok again
+  Console::puts("WRITING TO FILE..\n");
+  f->Write(504, buf); //write 504 bytes to file
+  Console::puts("WRITTEN TO FILE!\n");
+
+  // Delete file 
+  Console::puts("DELETING FILE..\n");
+  _file_system->DeleteFile(file_id);
+  Console::puts("FILE DELETED!\n");
+
+  // LOOK FOR FILE AFTER DELETE 
+  Console::puts("LOOKING UP FILE AFTER DELETED, EXPECTED TO NOT FIND\n");
+  found = _file_system->LookupFile(file_id, f); //make sure the file was created properly
+  if(found)
+    Console::puts("FILE FOUND!\n");
+  else
+    Console::puts("FILE NOT FOUND!\n");
+}
+
+void exercise_file2(FileSystem* _file_system){
+  /* TESTS FOR SECOND FILE */
+  unsigned int file_id2 = 2;
+  Console::puts("CREATING FILE 2..\n");
+  _file_system->CreateFile(file_id2); //create file with id 2
+  Console::puts("FILE 2 CREATED!\n");
+
+  File* f2;
+  Console::puts("LOOKING UP FILE 2..\n");
+  BOOLEAN found2 = _file_system->LookupFile(file_id2, f2); //make sure the file was created properly
+  if(found2)
+    Console::puts("FILE 2 FOUND!\n");
+  else
+    Console::puts("ERROR, FILE 2 NOT FOUND!\n");
+
+  char* buf;
+  for (int i = 0; i < 504; ++i) //create buffer to be written on the file
+  {
+    char* ch;
+    int2str(i, ch);
+    buf[i] = (char)(*ch);
+  }
+
+  Console::puts("WRITING TO FILE 2..\n");
+  f2->Write(504, buf); //write 504 bytes to file
+  Console::puts("WRITTEN TO FILE 2!\n");
+
+  Console::puts("READING FROM FILE 2..\n");
+  f2->Reset();//reset the current position pointer to the beginning of the file
+  f2->Read(504, buf); //read the 504 bytes from file
+
+  for (int i = 0; i < 504; ++i) //check if the read results are the expected ones
+  {
+    char* ch;
+    int2str(i, ch);
+    if(buf[i] != (*ch))
+      Console::puts("ERROR, READ CHARACTER IS NOT THE EXPECTED!\n");
+  }
+  Console::puts("READ FROM FILE 2!\n");
+
+
+  
+  //Reset file
+  Console::puts("RESETTING FILE 2..\n");
+  f2->Reset();
+  Console::puts("FILE 2 RESETED!\n");
+
+
+
+  Console::puts("WRITING TO FILE 2..\n");
+  f2->Write(504, buf); //write 504 bytes to file
+  Console::puts("WRITTEN TO FILE 2!\n");
+
+  // Test if reached end of file 
+  Console::puts("Is EOF? (Expected 1) Actual: ");
+  unsigned int eof2 = f2->EoF();
+  if(eof2)
+    Console::puts("1\n");
+  else
+    Console::puts("0\n");
+
+  //Write and Read when the position is already at the end of file
+  Console::puts("WRITING TO FILE 2 WITHOUT RESETTING, EXPECTED ERROR MESSAGE..\n");
+  f2->Write(504, buf); //write 504 bytes to file
+
+  Console::puts("READING FROM FILE 2 WITHOUT RESETTING, EXPECTED WARNING MESSAGE\n");
+  f2->Read(504, buf); //read the 504 bytes from file
+
+  
+
+  // Rewrite file
+  Console::puts("REWRITING FILE 2..\n");
+  f2->Rewrite();
+  Console::puts("FILE 2 REWRITTEN!\n");
+
+  // Test if reached end of file 
+  Console::puts("Is EOF? (Expected 0) Actual: ");
+  eof2 = f2->EoF();
+  if(eof2)
+    Console::puts("1\n");
+  else
+    Console::puts("0\n");
+
+  //write to file after rewriting it, should be ok again
+  Console::puts("WRITING TO FILE 2..\n");
+  f2->Write(504, buf); //write 504 bytes to file
+  Console::puts("WRITTEN TO FILE 2!\n");
+
+  // Delete file 
+  Console::puts("DELETING FILE 2..\n");
+  _file_system->DeleteFile(file_id2);
+  Console::puts("FILE 2 DELETED!\n");
+
+  // LOOK FOR FILE AFTER DELETE 
+  Console::puts("LOOKING UP FILE 2 AFTER DELETED, EXPECTED TO NOT FIND\n");
+  found2 = _file_system->LookupFile(file_id2, f2); //make sure the file was created properly
+  if(found2)
+    Console::puts("FILE 2 FOUND!\n");
+  else
+    Console::puts("FILE 2 NOT FOUND!\n");
+}
+
 void exercise_file_system(FileSystem * _file_system, SimpleDisk * _simple_disk) {
-  /* NOTHING FOR NOW. 
-     FEEL FREE TO ADD YOUR OWN CODE. */
+  Console::puts("FORMATTING..\n");
+  _file_system->Format(_simple_disk, 1024); //format the entire disk
+  Console::puts("FORMAT DONE!\n");
+
+  Console::puts("MOUNTING DISK..\n");
+  _file_system->Mount(_simple_disk); //mount disk on the file system
+  Console::puts("DISK MOUNTED!\n");
+
+
+  //exercise_file1(_file_system);
+
+  /* TESTS FOR FIRST FILE */
+  for(unsigned int n = 0;n < 1; n++){
+    unsigned int file_id = n;
+    /* STARTING THE TESTING ROUTINE FOR A FILE */
+    //Console::puts("STARTING TESTING ROUTINE ON A NEW FILE");
+    _file_system->CreateFile(file_id); //create file with id 1
+    Console::puts("FILE CREATED!\n");
+
+    File* f;
+    Console::puts("LOOKING UP FILE..\n");
+    BOOLEAN found = _file_system->LookupFile(file_id, f); //make sure the file was created properly
+    if(found)
+      Console::puts("FILE FOUND!\n");
+    else
+      Console::puts("ERROR, FILE NOT FOUND!\n");
+
+    char* buf;
+    for (int i = 0; i < 504; ++i) //create buffer to be written on the file
+    {
+      char* ch;
+      int2str(i, ch);
+      buf[i] = (char)(*ch);
+    }
+
+    Console::puts("WRITING TO FILE..\n");
+    f->Write(504, buf); //write 504 bytes to file
+    Console::puts("WRITTEN TO FILE!\n");
+
+    Console::puts("READING FROM FILE..\n");
+    f->Reset();//reset the current position pointer to the beginning of the file
+    f->Read(504, buf); //read the 504 bytes from file
+
+    for (int i = 0; i < 504; ++i) //check if the read results are the expected ones
+    {
+      char* ch;
+      int2str(i, ch);
+      if(buf[i] != (*ch))
+        Console::puts("ERROR, READ CHARACTER IS NOT THE EXPECTED!\n");
+    }
+    Console::puts("READ FROM FILE!\n");
+
+
+    
+    //Reset file
+    Console::puts("RESETTING FILE..\n");
+    f->Reset();
+    Console::puts("FILE RESETED!\n");
+
+
+
+    Console::puts("WRITING TO FILE..\n");
+    f->Write(504, buf); //write 504 bytes to file
+    Console::puts("WRITTEN TO FILE!\n");
+
+    // Test if reached end of file 
+    Console::puts("Is EOF? (Expected 1) Actual: ");
+    unsigned int eof = f->EoF();
+    if(eof)
+      Console::puts("1\n");
+    else
+      Console::puts("0\n");
+
+    //Write and Read when the position is already at the end of file
+    Console::puts("WRITING TO FILE WITHOUT RESETTING, EXPECTED ERROR MESSAGE..\n");
+    f->Write(504, buf); //write 504 bytes to file
+
+    Console::puts("READING FROM FILE WITHOUT RESETTING, EXPECTED WARNING MESSAGE\n");
+    f->Read(504, buf); //read the 504 bytes from file
+
+    
+
+    // Rewrite file
+    Console::puts("REWRITING FILE..\n");
+    f->Rewrite();
+    Console::puts("FILE REWRITTEN!\n");
+
+    // Test if reached end of file 
+    Console::puts("Is EOF? (Expected 0) Actual: ");
+    eof = f->EoF();
+    if(eof)
+      Console::puts("1\n");
+    else
+      Console::puts("0\n");
+
+    //write to file after rewriting it, should be ok again
+    Console::puts("WRITING TO FILE..\n");
+    f->Write(504, buf); //write 504 bytes to file
+    Console::puts("WRITTEN TO FILE!\n");
+
+    // Delete file 
+    Console::puts("DELETING FILE..\n");
+    _file_system->DeleteFile(file_id);
+    Console::puts("FILE DELETED!\n");
+
+    // LOOK FOR FILE AFTER DELETE 
+    Console::puts("LOOKING UP FILE AFTER DELETED, EXPECTED TO NOT FIND\n");
+    found = _file_system->LookupFile(file_id, f); //make sure the file was created properly
+    if(found)
+      Console::puts("FILE FOUND!\n");
+    else
+      Console::puts("FILE NOT FOUND!\n");
+  }
+
+  //exercise_file2(_file_system);
+
 }
 
 #endif
@@ -414,13 +733,13 @@ int main() {
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 2...");
-    char * stack2 = new char[4096];
-    thread2 = new Thread(fun2, stack2, 4096);
+    char * stack2 = new char[2048];
+    thread2 = new Thread(fun2, stack2, 2048);
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 3...");
-    char * stack3 = new char[1024];
-    thread3 = new Thread(fun3, stack3, 1024);
+    char * stack3 = new char[2048];
+    thread3 = new Thread(fun3, stack3, 2048);
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 4...");

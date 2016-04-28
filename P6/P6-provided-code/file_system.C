@@ -16,9 +16,12 @@ File::File(unsigned int fileID){ //initialize a file identified by its ID and ad
 
 unsigned int File::Read(unsigned int _n, char * _buf){
 	unsigned int count=_n;//initialize count
+	Lock(busy); //thread-safety for file access
 	while (count>0){
-		if (EoF() && count > 0)
+		if (EoF()) {
 			Console::puts("reached end of file before reading all chars\n");
+			break;
+		}
 			
 		FILE_SYSTEM->disk->read(block_num,disk_buffer);//read block from file
 		for (current_position; current_position < BLOCK_SIZE-HEADER_SIZE; current_position++){//read file data
@@ -30,14 +33,17 @@ unsigned int File::Read(unsigned int _n, char * _buf){
 			count-= 1; //decrement remaining chars to be read
 		}
 	}
+	Unlock(busy); //file able to be manipulated by another thread
 	return _n - count;//returns the total amount read
 }
 
 void File::Write(unsigned int _n, char * _buf){
 	unsigned int count=_n;//initialize count
+	Lock(busy); //thread-safety for file access
 	while (count > 0){
-		if (EoF() && count > 0){//reached end of file, get new block
-			Console::puts("reached end of file before writing all chars\n");
+		if (EoF()){//reached end of file, get new block
+			Console::puts("reached end of file before writing all chars, alterations not saved ond files!!\n");
+			break;
 		}
 		
 		FILE_SYSTEM->disk->read(block_num,disk_buffer);//read block from file
@@ -52,6 +58,8 @@ void File::Write(unsigned int _n, char * _buf){
 	}
 	if(count == 0) //able to perform the write on disk
 		FILE_SYSTEM->disk->write(block_num, disk_buffer); //write disk buff into disk
+
+	Unlock(busy); //file able to be manipulated by another thread
 }
 
 void File::Reset(){
@@ -61,27 +69,35 @@ void File::Reset(){
 
 void File::Rewrite(){
 	/* Since we are constraining the file to one block, we simply need to reset the current position */
-	Reset();
+	Lock(busy); //thread-safety for file access
+	FILE_SYSTEM->disk->read(block_num,disk_buffer);//read block from file
+	memset((void*)(disk_buffer + HEADER_SIZE), 0, BLOCK_SIZE - HEADER_SIZE); //erase contents from file
+	FILE_SYSTEM->disk->write(block_num, disk_buffer); //write changes into disk
+	Reset(); // reset current position pointer
+	Unlock(busy); //file able to be manipulated by another thread
 }
 
 BOOLEAN File::EoF(){		
-	if (current_position == BLOCK_SIZE-HEADER_SIZE-1 )
+	if (current_position == BLOCK_SIZE-HEADER_SIZE )
 		return TRUE;
 	else
 		return FALSE;
 }
+
+BOOLEAN FileSystem::busy; //declaring the static variable
 
 FileSystem::FileSystem(){
 	/* initialize all the variables to zero */
 	blocks_available=0;
 	files_size=0;
 	files=NULL;
-	memset(disk_buffer,0,BLOCK_SIZE);//clear buffer
+	memset(disk_buffer, 0, BLOCK_SIZE);//clear buffer
 }
 
 BOOLEAN FileSystem::Mount(SimpleDisk * _disk){
 	disk=_disk;
 	files_size=0;
+	Lock(busy); //thread-safety for file system access
 	for (unsigned int i = 0;i < size; i++){ //iterate over disk blocks
 		disk->read(i,disk_buffer);//read disk block
 		if(disk_block->availability == USED){ //there is a file on this block
@@ -91,40 +107,25 @@ BOOLEAN FileSystem::Mount(SimpleDisk * _disk){
 			AddFile(newFile);
 		}		
 	}
+	Unlock(busy); //file system able to be used by another thread
 }
 
-BOOLEAN FileSystem::Format(SimpleDisk * _disk, unsigned int _size){
-	//every file uses one disk_block as its inode, not the most efficient, but better to implement
-    //can support files up to about 64 KB 127*512
-    //first disk_block of filesystem is always reserved for an array of inodes with more if needed
-    //meaning our system will theoretically support up to 2^32 files but realistically we will long run out of memory before then
-    //first 4 bytes of the first disk_block is the number of files disk_block
-    /*testing FILE_SYSTEM->disk->read(50,disk_buffer);
-            putUIntData(disk_buffer,10*sizeof(unsigned int));
-            Console::puts("\nRead initial\n");
-    memset(disk_buffer,'b',15);
-      FILE_SYSTEM->disk->write(50,disk_buffer);
-            putUIntData(disk_buffer+HEADER_SIZE,10*sizeof(unsigned int));
-            Console::puts("\nWrote\n");
-    memset(disk_buffer,0x0,BLOCK_SIZE);
-    FILE_SYSTEM->disk->read(50,disk_buffer);
-            putUIntData(disk_buffer+HEADER_SIZE,10*sizeof(unsigned int));
-            Console::puts("\nAFTER WRITE\n");
-    assert(false); */
-    size = _size/BLOCK_SIZE; //set the size of the formatted disk in blocks
+BOOLEAN FileSystem::Format(SimpleDisk * _disk, unsigned int _size){    
     memset(disk_buffer,0,BLOCK_SIZE);
     Console::puts("Formatting Disk, may take awhile\n");
+    Lock(busy); //thread-safety for file system access
+    size = _size/BLOCK_SIZE; //set the size of the formatted disk in blocks
     if(size > SYSTEM_BLOCKS) //if desired size is greater than the physical space, limit it to physical disk space
     	size = SYSTEM_BLOCKS;
 
-    for (int i=0;i<size;++i) //set formatted disk to 0, automatically free memory
+    for (unsigned int i=0;i<size;++i) //set formatted disk to 0, automatically free memory
+    {
+    	Console::puts("Formatting block: ");
+    	Console::putui(i);
+    	Console::puts("\n");
         _disk->write(i,disk_buffer);
-		
-	/*_disk->read(0, disk_buffer);
-    disk_block->availability=USED;//set disk_block to used
-    disk_block->size=0;//write to  size disk_block this will cause first 4 bytes to be empty which is interpereted as 0 files on disk
-    _disk->write(0,disk_buffer);//initializes master disk_block   */ 
-    Console::puts("Format of empty file system complete\n");
+    }
+    Unlock(busy); //file system able to be used by another thread
 }
 
 BOOLEAN FileSystem::LookupFile(int _file_id, File * _file){	
@@ -140,6 +141,7 @@ BOOLEAN FileSystem::LookupFile(int _file_id, File * _file){
 
 BOOLEAN FileSystem::CreateFile(int _file_id){
 	File* newFile = NULL;
+	Lock(busy); //thread-safety for file system access
 	if (LookupFile(_file_id,newFile))
 		return FALSE; //file already exists
 
@@ -157,6 +159,7 @@ BOOLEAN FileSystem::CreateFile(int _file_id){
 	disk_block->id = _file_id;
 	disk->write(newFile->block_num,disk_buffer);//write file inode to disk
 	AddFile(newFile);//add file to the files array
+	Unlock(busy); //file system able to be used by another thread
 	return TRUE;
 }
 
@@ -165,6 +168,7 @@ BOOLEAN FileSystem::DeleteFile(int _file_id){
 	if (!LookupFile(_file_id,file)) //file doesn't exist, return false
 		return FALSE;
 	
+	Lock(busy); //thread-safety for file system access
 	File* new_file_array= (File*)new File[files_size-1];
 	BOOLEAN found = FALSE;
 	unsigned int j = 0;
@@ -183,7 +187,8 @@ BOOLEAN FileSystem::DeleteFile(int _file_id){
 	files=new_file_array;//set pointer to new array
 	if (files_size==0)
 		files=NULL; //files array is empty
-		
+
+	Unlock(busy); //file system able to be used by another thread
 	return found;	
 }
 
