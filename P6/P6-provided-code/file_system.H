@@ -27,14 +27,11 @@ static DiskBlock* disk_block=(DiskBlock*)disk_buffer;//cast disk buffer to the D
 class File {
 	friend class FileSystem;
 	/* -- your file data structures here ... */
-	//FileSystem   * file_system;
-
      unsigned int   file_id;
      unsigned int 	block_num; //number of the block containing the file
-     
+     unsigned int   current_position; //current position in the block
 	 BOOLEAN busy; //variable used for thread-safe file access
-	public:
-	unsigned int   current_position; //current position in the block
+	public:	
 	File();
 	File(unsigned int fileID);
 	/* Constructor for the file handle. Set the ’current position’
@@ -100,9 +97,9 @@ class FileSystem {
 	* disk block occupied by the file.
 	*/
 	int AllocateBlock();
-	/* Allocates a block from free list, for use in file */
+	/* Allocates a block from the available ones, for use in file */
 	void FreeBlock(unsigned int block_index);
-	/* Deallocates a block from free list, for use in file */
+	/* Deallocates a used block */
 	void AddFile(File* file);
 	/* Adds the file to the files array */
 };
