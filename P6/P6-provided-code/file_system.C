@@ -88,7 +88,6 @@ BOOLEAN FileSystem::busy; //declaring the static variable
 
 FileSystem::FileSystem(){
 	/* initialize all the variables to zero */
-	blocks_available=0;
 	files_size=0;
 	files=NULL;
 	memset(disk_buffer, 0, BLOCK_SIZE);//clear buffer
@@ -149,7 +148,6 @@ BOOLEAN FileSystem::CreateFile(int _file_id){
 	if(available_block == -1)
 		return FALSE; //file system is full
 		
-
 	newFile = new File();
 	newFile->file_id=_file_id;
 	newFile->Rewrite(); //ensures current position is at the beginning	
@@ -193,23 +191,20 @@ BOOLEAN FileSystem::DeleteFile(int _file_id){
 }
 
 int FileSystem::AllocateBlock(){
-	disk->read(blocks_available,disk_buffer);
-	BOOLEAN fromStart=FALSE;
+	unsigned int block = 0;
+	disk->read(block,disk_buffer);
 	while (disk_block->availability == USED){
-		if (blocks_available>(size-1)){//try again starting from the beginning
-			blocks_available = 0;
-			if (fromStart)
-				return -1; //did not find any disk_block on the entire disk
-			
-			fromStart = TRUE;
-		}
-		++blocks_available;
-		disk->read(blocks_available,disk_buffer);
+		if(block == SYSTEM_BLOCKS) //no available block found
+			return -1;
+		
+		disk->read(block, disk_buffer);
+		++block;
+		
 	}
-	disk->read(blocks_available,disk_buffer);
+	disk->read(block,disk_buffer);
 	disk_block->availability=USED;//sets disk_block header to used
-	disk->write(blocks_available,disk_buffer);
-	return blocks_available;
+	disk->write(block,disk_buffer);
+	return block;
 }
 
 void FileSystem::FreeBlock(unsigned int block_index){
@@ -219,8 +214,10 @@ void FileSystem::FreeBlock(unsigned int block_index){
 }
 
 void FileSystem::AddFile(File* file){
-	if (files=NULL)
+	if (files==NULL){
 		files=file;
+		files_size = 1;
+	}
 	else
 	{
 		File* new_file_array = (File*)new File[files_size+1];

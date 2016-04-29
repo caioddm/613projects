@@ -67,11 +67,10 @@ class FileSystem {
 	/* your file system data structures here ... */
 	 SimpleDisk * disk; //disk accessed by the file system
      static unsigned int size; //size of the file system
-     unsigned int blocks_available; //block to look for free blocks
 	 File* files; //keeps track of the files in the file system
 	 unsigned int files_size; //number of files in the file system
 	 static BOOLEAN busy; //variable used for thread-safe file system access
-	public:
+	public:	
 	FileSystem();
 	/* Just initializes local data structures.
 	* Does not connect to disk yet.
